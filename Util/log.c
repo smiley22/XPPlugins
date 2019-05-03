@@ -3,10 +3,10 @@
 static int debug_enabled = -1;
 static char plugin_name[MAX_NAME];
 
-static const char *get_plugin_name() {
+static const char *get_name() {
     if (plugin_name[0])
         return plugin_name;
-    XPLMGetPluginInfo(XPLMGetMyID(), plugin_name, NULL, NULL, NULL);
+    get_plugin_name(plugin_name, MAX_NAME);
     return plugin_name;
 }
 
@@ -15,7 +15,7 @@ void _log(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vsprintf(buf, fmt, args);
-    sprintf(out, "[%s]: %s\r\n", get_plugin_name(), buf);
+    sprintf(out, "[%s]: %s\r\n", get_name(), buf);
     XPLMDebugString(out);
     va_end(args);
 }
@@ -29,7 +29,7 @@ void _debug(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vsprintf(buf, fmt, args);
-    sprintf(out, "[%s] (debug): %s\r\n", get_plugin_name(), buf);
+    sprintf(out, "[%s] (debug): %s\r\n", get_name(), buf);
     XPLMDebugString(out);
     va_end(args);
 }

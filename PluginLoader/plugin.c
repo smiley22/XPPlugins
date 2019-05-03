@@ -150,7 +150,7 @@ int load_plugin(const char *file, int enable, plugin_t *plugin) {
     if (!p)
         return 0;
     strcpy(p, ".tmp");
-    if (!CopyFile(file, buf, FALSE)) {
+    if (!CopyFileA(file, buf, FALSE)) {
         _log("could not copy file '%s' to '%s'", file, buf);
         return 0;
     }
@@ -190,12 +190,12 @@ int load_plugins(int enable) {
     WIN32_FIND_DATAA ffd;
     HANDLE h;
     if ((h = FindFirstFileA(buf, &ffd)) == INVALID_HANDLE_VALUE) {
-        _log("FindFirstFileA failed (%i)", GetLastError());
+        _log("FindFirstFileA failed for %s (%i)", buf, GetLastError());
         return 0;
     }
     int loaded = 0;
     do {
-        sprintf(buf, "%s%s", dir, ffd.cFileName);
+        sprintf(buf, "%s64/%s", dir, ffd.cFileName);
         if (load_plugin(buf, enable, &plugins[loaded])) {
             loaded++;
         }
