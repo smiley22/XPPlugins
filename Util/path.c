@@ -29,7 +29,7 @@ int get_plugin_name(char *buf, int size) {
     p = strrchr(buf, '/');
     if (!p)
         return 0;
-    *(p + 1) = 0;
+    *p = 0;
     return 1;
 }
 
