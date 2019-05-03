@@ -1,7 +1,13 @@
-CC      = clang
-CFLAGS  = -Wall
-LFLAGS  = -v ../Util/util.a
+NAME    = mac.xpl
 SRC     = $(wildcard *.c)
+CC      = clang
+CFLAGS  = -Wall -DAPL -O2
+LDFLAGS = ../XP/Libs/XPLM ../Util/util.a -dynamiclib -fvisibility=hidden
 
-all: $(SRC)
-	$(CC) $(CFLAGS) -o $@ $^ $(LFLAGS)
+all: $(NAME)
+
+$(NAME): $(SRC)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+clean:
+	rm -f *.o $(NAME)

@@ -6,6 +6,7 @@
  *
  * Copyright 2019 Torben Könke.
  */
+#include <stdlib.h>
 #include "../Util/util.h"
 #include "../XP/XPLMPlanes.h"
 
@@ -95,7 +96,7 @@ PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
 /*
 * Gets the list of quick-looks configured for the current plane.
 */
-static int get_quick_looks(int *buf, int buf_size) {
+int get_quick_looks(int *buf, int buf_size) {
     char name[256], path[512];
     XPLMGetNthAircraftModel(0, name, path);
     /* overwrite .acf extension to get path for _prefs file */
