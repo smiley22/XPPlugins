@@ -19,6 +19,8 @@
 #include "../FMOD/fmod.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdarg.h>
+#include <string.h>
 
 #ifndef MAX_PATH
 #define MAX_PATH 512

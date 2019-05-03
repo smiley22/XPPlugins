@@ -1,6 +1,6 @@
 CC      = clang
 CFLAGS  = -Wall
-LFLAGS  = -v ../XP/Libs/XPLM
+LFLAGS  = -v ../Util/util.a
 SRC     = $(wildcard *.c)
 
 all: $(SRC)
