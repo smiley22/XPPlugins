@@ -23,12 +23,6 @@ static float cyan[] = { 0, 1.0f, 1.0f };
 static long long last_reload;
 
 /*
- * We copy the actual plugin dlls to temp files that then get loaded instead
- * so that Windows will not lock the original dlls.
- */
-#define PLUGIN_TEMP_DLL_NAME "z_plugin_%i.tmp"
-
-/*
  * X-Plane 11 Plugin Entry Point.
  *
  * Called when a plugin is initially loaded into X-Plane 11. If 0 is returned,
@@ -131,7 +125,26 @@ int init_func_ptrs(plugin_t *plugin) {
     return 1;
 }
 
+/*
+ * Gets the "modified" date of a file, formatted as a user-friendly string.
+ */
+static int get_modified_formatted(const char *path, char *buf, int size) {
+    struct _stat st;
+    if (_stat(path, &st))
+        return 0;
+    /* convert to struct tm */
+    struct tm *lt = localtime(&st.st_mtime);
+    strftime(buf, size, "Modified Date %d/%m/%y - %T", lt);
+    return 1;
+}
+
 int load_plugin(const char *file, int enable, plugin_t *plugin) {
+    strcpy(plugin->path, file);
+    if (!get_modified_formatted(file, plugin->modified,
+        sizeof(plugin->modified))) {
+        _log("could not get modified date for %s", file);
+        return 0;
+    }
     /* Copy Dll file to temporary file. */
     char buf[MAX_PATH];
     strcpy(buf, file);
@@ -140,26 +153,25 @@ int load_plugin(const char *file, int enable, plugin_t *plugin) {
         return 0;
     strcpy(p, ".tmp");
     if (!CopyFile(file, buf, FALSE)) {
-        _log("load_plugin: could not copy file '%s' to '%s'", file, buf);
+        _log("could not copy file '%s' to '%s'", file, buf);
         return 0;
     }
     if (!(plugin->mod = LoadLibraryA(buf))) {
-        _log("load_plugin: could not load library '%s' (%i)", file,
-            GetLastError());
+        _log("could not load library '%s' (%i)", file, GetLastError());
         return 0;
     }
     if (!init_func_ptrs(plugin)) {
-        _log("load_plugin: could not init function pointers for '%s'", file);
+        _log("could not init function pointers for '%s'", file);
         FreeLibrary(plugin->mod);
         return 0;
     }
     char name[256], sig[256], desc[256];
     if(!plugin->XPluginStart(name, sig, desc)) {
-        _log("load_plugin: XPluginStart returned 0 for '%s'", plugin->path);
+        _log("XPluginStart returned 0 for '%s'", plugin->path);
         FreeLibrary(plugin->mod);
         return 0;
     }
-    _log("load_plugin: plugin loaded (%s, %s, %s)", name, sig, desc);
+    _log("plugin loaded (%s, %s, %s)", name, sig, desc);
     if (enable)
         plugin->XPluginEnable();
     return 1;
@@ -170,16 +182,27 @@ int load_plugin(const char *file, int enable, plugin_t *plugin) {
  * have been loaded.
  */
 int load_plugins(int enable) {
-    /* unload plugins first if they have already been loaded */
+    /* Unload plugins first if they have already been loaded. */
     unload_plugins();
-
-    int num_files = 0;
+    char dir[MAX_PATH];
+    if (!get_plugin_dir(dir, MAX_PATH))
+        return 0;
+    char buf[MAX_PATH];
+    sprintf(buf, "%s64/*.dll", dir);
+    WIN32_FIND_DATAA ffd;
+    HANDLE h;
+    if ((h = FindFirstFileA(buf, &ffd)) == INVALID_HANDLE_VALUE) {
+        _log("FindFirstFileA failed (%i)", GetLastError());
+        return 0;
+    }
     int loaded = 0;
-    for (int i = 0; i < num_files; i++) {
-        if (load_plugin(NULL, enable, &plugins[loaded])) {
+    do {
+        sprintf(buf, "%s%s", dir, ffd.cFileName);
+        if (load_plugin(buf, enable, &plugins[loaded])) {
             loaded++;
         }
-    }
+    } while (FindNextFileA(h, &ffd) != 0);
+    FindClose(h);
     _log("%i plugins loaded", loaded);
     return loaded;
 }
@@ -198,6 +221,4 @@ void unload_plugins() {
         }
     }
     _log("%i plugins unloaded", num_plugins);
-    num_plugins = 0;
-    memset(plugins, 0, sizeof(plugins));
 }

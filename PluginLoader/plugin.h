@@ -12,6 +12,9 @@
 
 #include "../Util/util.h"
 #include "../XP/XPLMPlugin.h"
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 typedef int(__cdecl *XPluginStartProc)(char *name, char *sig, char *desc);
 typedef void(__cdecl *XPluginStopProc)(void);
@@ -32,7 +35,6 @@ typedef struct {
 } plugin_t;
 
 int reload_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data);
-int setup_function_pointers(HMODULE mod);
 int load_plugins(int enable);
 void unload_plugins();
 
