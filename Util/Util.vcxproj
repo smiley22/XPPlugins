@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cmd.c" />
     <ClCompile Include="dllmain.c" />
     <ClCompile Include="ini.c" />
     <ClCompile Include="log.c" />
