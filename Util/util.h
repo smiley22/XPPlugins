@@ -5,13 +5,20 @@
 #define XPLM210
 #define XPLM300
 #ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
 #define IBM 1
 #endif /* _WIN32 */
 
 #include "../XP/XPLMUtilities.h"
 #include "../XP/XPLMDataAccess.h"
+#include "../XP/XPLMPlugin.h"
 #include "../FMOD/fmod.h"
+#include <stdio.h>
 #include <stdbool.h>
+
+#ifndef MAX_PATH
+#define MAX_PATH 512
+#endif
 
 /* ini */
 int ini_geti(const char *name, int def);
