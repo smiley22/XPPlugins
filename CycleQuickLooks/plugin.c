@@ -6,9 +6,9 @@
  *
  * Copyright 2019 Torben Könke.
  */
-#include <stdlib.h>
 #include "../Util/util.h"
 #include "../XP/XPLMPlanes.h"
+#include <stdlib.h>
 
 #define PLUGIN_NAME         "Cycle Quick Looks"
 #define PLUGIN_SIG          "S22.CycleQuickLooks"

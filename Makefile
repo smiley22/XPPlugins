@@ -1,6 +1,6 @@
 TOPTARGETS := all clean
 
-SUBDIRS := Util CycleQuickLooks
+SUBDIRS := Util CycleQuickLooks BetterMouseYoke
 
 $(TOPTARGETS): $(SUBDIRS)
 $(SUBDIRS):
