@@ -1,6 +1,6 @@
 #include "util.h"
 
-long long get_time_ms() {
+long long get_time_ms(void) {
 #ifdef IBM
     const long long WINDOWS_TICK = 10000000LL;
     const long long SEC_TO_UNIX_EPOCH = 11644473600LL;

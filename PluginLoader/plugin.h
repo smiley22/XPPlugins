@@ -12,6 +12,9 @@
 
 #include "../Util/util.h"
 #include "../XP/XPLMPlugin.h"
+#include "../XP/XPLMDisplay.h"
+#include "../XP/XPLMGraphics.h"
+#include <math.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -26,7 +29,7 @@ typedef void(__cdecl *XPluginReceiceMessageProc)(XPLMPluginID from, int msg,
 typedef struct {
     HMODULE mod;
     char path[MAX_PATH];
-    char modified[128];
+    char name[256];
     XPluginStartProc XPluginStart;
     XPluginStopProc XPluginStop;
     XPluginEnableProc XPluginEnable;
@@ -35,6 +38,7 @@ typedef struct {
 } plugin_t;
 
 int reload_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data);
+int draw_cb(XPLMDrawingPhase phase, int before, void *data);
 int load_plugins(int enable);
 void unload_plugins();
 

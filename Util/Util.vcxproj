@@ -25,9 +25,9 @@
     <ClCompile Include="log.c" />
     <ClCompile Include="path.c" />
     <ClCompile Include="snd.c" />
+    <ClCompile Include="time.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="time.c" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

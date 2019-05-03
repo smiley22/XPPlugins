@@ -21,6 +21,7 @@ static XPLMCommandRef reload;
 static float magenta[] = { 1.0f, 0, 1.0f };
 static float cyan[] = { 0, 1.0f, 1.0f };
 static long long last_reload;
+static char info[3][128];
 
 /*
  * X-Plane 11 Plugin Entry Point.
@@ -62,6 +63,7 @@ PLUGIN_API int XPluginEnable(void) {
     }
     reload = cmd_create("Plugin/Reload", "Reload Plugin Dll(s)", reload_cb,
         NULL);
+    XPLMRegisterDrawCallback(draw_cb, xplm_Phase_Window, 0, NULL);
     return 1;
 }
 
@@ -75,6 +77,7 @@ PLUGIN_API void XPluginDisable(void) {
         plugins[i].XPluginDisable();
     }
     cmd_free(reload);
+    XPLMUnregisterDrawCallback(draw_cb, xplm_Phase_Window, 0, NULL);
 }
 
 /**
@@ -91,9 +94,22 @@ PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
 int reload_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data) {
     if (phase == xplm_CommandBegin) {
         load_plugins(1);
-        last_reload = get_time_ms();
     }
     return 0;
+}
+
+int draw_cb(XPLMDrawingPhase phase, int before, void *data) {
+    if (num_plugins > 0) {
+        /* fade color from white to magenta if reloaded as visual indicator */
+        long long dt = min(1000, get_time_ms() - last_reload);
+        magenta[1] = (1000 - dt) / 1000.0f;
+        XPLMDrawString(magenta, 20, 50, info[0], NULL, xplmFont_Proportional);
+        XPLMDrawString(magenta, 20, 30, info[1], NULL, xplmFont_Proportional);
+        XPLMDrawString(magenta, 20, 10, info[2], NULL, xplmFont_Proportional);
+    } else {
+        XPLMDrawString(cyan, 20, 50, "No plugin loaded", NULL, xplmFont_Proportional);
+    }
+    return 1;
 }
 
 int init_func_ptrs(plugin_t *plugin) {
@@ -125,26 +141,8 @@ int init_func_ptrs(plugin_t *plugin) {
     return 1;
 }
 
-/*
- * Gets the "modified" date of a file, formatted as a user-friendly string.
- */
-static int get_modified_formatted(const char *path, char *buf, int size) {
-    struct _stat st;
-    if (_stat(path, &st))
-        return 0;
-    /* convert to struct tm */
-    struct tm *lt = localtime(&st.st_mtime);
-    strftime(buf, size, "Modified Date %d/%m/%y - %T", lt);
-    return 1;
-}
-
 int load_plugin(const char *file, int enable, plugin_t *plugin) {
     strcpy(plugin->path, file);
-    if (!get_modified_formatted(file, plugin->modified,
-        sizeof(plugin->modified))) {
-        _log("could not get modified date for %s", file);
-        return 0;
-    }
     /* Copy Dll file to temporary file. */
     char buf[MAX_PATH];
     strcpy(buf, file);
@@ -165,13 +163,13 @@ int load_plugin(const char *file, int enable, plugin_t *plugin) {
         FreeLibrary(plugin->mod);
         return 0;
     }
-    char name[256], sig[256], desc[256];
-    if(!plugin->XPluginStart(name, sig, desc)) {
+    char sig[256], desc[256];
+    if(!plugin->XPluginStart(plugin->name, sig, desc)) {
         _log("XPluginStart returned 0 for '%s'", plugin->path);
         FreeLibrary(plugin->mod);
         return 0;
     }
-    _log("plugin loaded (%s, %s, %s)", name, sig, desc);
+    _log("plugin loaded (%s, %s, %s)", plugin->name, sig, desc);
     if (enable)
         plugin->XPluginEnable();
     return 1;
@@ -204,6 +202,17 @@ int load_plugins(int enable) {
     } while (FindNextFileA(h, &ffd) != 0);
     FindClose(h);
     _log("%i plugins loaded", loaded);
+    last_reload = get_time_ms();
+    /* update buffers drawn on the screen */
+    sprintf(info[0], "%i plugin(s) loaded", loaded);
+    strcpy(info[1], "[");
+    for (int i = 0; i < loaded; i++) {
+        strcat(info[1], plugins[i].name);
+        strcat(info[1], i < (loaded - 1) ? ", " : "]");
+    }
+    time_t t = time(NULL);
+    struct tm *lt = localtime(&t);
+    strftime(info[2], sizeof(info[2]), "Last reload at %d/%m/%y - %T", lt);
     return loaded;
 }
 
