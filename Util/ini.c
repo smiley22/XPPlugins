@@ -40,9 +40,15 @@ int ini_setf(const char *name, float val) {
 }
 
 void ini_gets(const char *name, char *buf, int size, const char *def) {
-
+    char *f = ini_get_path();
+#ifdef IBM
+    GetPrivateProfileStringA(INI_SECT_NAME, name, def, buf, size, f);
+#endif
 }
 
 int ini_sets(const char *name, const char *val) {
-
+    char *f = ini_get_path();
+#ifdef IBM
+    return WritePrivateProfileStringA(INI_SECT_NAME, name, val, f);
+#endif
 }

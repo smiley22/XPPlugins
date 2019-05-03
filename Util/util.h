@@ -5,8 +5,12 @@
 #define XPLM210
 #define XPLM300
 #ifdef _WIN32
+#ifndef _WIN64
+#error Only 64-Bit platforms are supported.
+#endif
 #define _CRT_SECURE_NO_WARNINGS
 #define IBM 1
+#pragma comment(lib, "../XP/Libs/XPLM_64.lib")
 #endif /* _WIN32 */
 
 #include "../XP/XPLMUtilities.h"
@@ -18,6 +22,9 @@
 
 #ifndef MAX_PATH
 #define MAX_PATH 512
+#endif
+#ifndef MAX_NAME
+#define MAX_NAME 256
 #endif
 
 /* ini */
