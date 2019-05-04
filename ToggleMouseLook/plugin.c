@@ -1,3 +1,10 @@
+/**
+ * ToggleMouseLook - X-Plane 11 Plugin
+ *
+ * Adds two new commands that mimic the mouse look behaviour of Prepar3D.
+ *
+ * Copyright 2019 Torben Könke.
+ */
 #include "plugin.h"
 
 #define PLUGIN_NAME         "ToggleMouseLook"
