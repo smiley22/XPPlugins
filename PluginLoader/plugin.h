@@ -1,4 +1,4 @@
-/*
+/**
  * PluginLoader - X-Plane 11 Plugin
  *
  * Enables dynamic loading und unloading of plugins dll so that one does not

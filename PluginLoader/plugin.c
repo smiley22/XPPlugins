@@ -1,4 +1,4 @@
-/*
+/**
  * PluginLoader - X-Plane 11 Plugin
  *
  * Enables dynamic loading und unloading of plugins dll so that one does not
@@ -23,7 +23,7 @@ static float cyan[] = { 0, 1.0f, 1.0f };
 static long long last_reload;
 static char info[3][128];
 
-/*
+/**
  * X-Plane 11 Plugin Entry Point.
  *
  * Called when a plugin is initially loaded into X-Plane 11. If 0 is returned,
@@ -100,7 +100,8 @@ int reload_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data) {
 
 int draw_cb(XPLMDrawingPhase phase, int before, void *data) {
     if (num_plugins > 0) {
-        /* fade color from white to magenta if reloaded as visual indicator */
+        /* Fade colour from white to magenta if just reloaded as visual
+           indicator. */
         long long dt = min(1000, get_time_ms() - last_reload);
         magenta[1] = (1000 - dt) / 1000.0f;
         XPLMDrawString(magenta, 20, 50, info[0], NULL, xplmFont_Proportional);
@@ -175,7 +176,7 @@ int load_plugin(const char *file, int enable, plugin_t *plugin) {
     return 1;
 }
 
-/*
+/**
  * Loads all plugin Dlls that we can find and returns the number of Dlls that
  * have been loaded.
  */
@@ -203,7 +204,7 @@ int load_plugins(int enable) {
     FindClose(h);
     _log("%i plugins loaded", loaded);
     last_reload = get_time_ms();
-    /* update buffers drawn on the screen */
+    /* Update information shown on screen. */
     sprintf(info[0], "%i plugin(s) loaded", loaded);
     strcpy(info[1], "[");
     for (int i = 0; i < loaded; i++) {
@@ -216,7 +217,7 @@ int load_plugins(int enable) {
     return loaded;
 }
 
-/*
+/**
  * Gracefully unloads all loaded plugins and unmaps them from XP's address
  * space.
  */
