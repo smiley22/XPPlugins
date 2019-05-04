@@ -16,7 +16,7 @@
 #ifdef _WIN32
 #ifndef _WIN64
 #error Only 64-Bit platforms are supported.
-#endif
+#endif /* _WIN64 */
 #define _CRT_SECURE_NO_WARNINGS
 #define IBM 1
 #pragma comment(lib, "../XP/Libs/XPLM_64.lib")
