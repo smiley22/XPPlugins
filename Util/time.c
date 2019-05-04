@@ -12,14 +12,13 @@
 long long get_time_ms() {
 #ifdef IBM
     static const __int64 EPOCH = ((__int64)116444736000000000ULL);
-    SYSTEMTIME system_time;
-    FILETIME file_time;
-    __int64 time;
-    GetSystemTime(&system_time);
-    SystemTimeToFileTime(&system_time, &file_time);
-    time = ((__int64)file_time.dwLowDateTime);
-    time += ((__int64)file_time.dwHighDateTime) << 32;
-    return 1000L * ((time - EPOCH) / 10000000L) + system_time.wMilliseconds;
+    SYSTEMTIME st;
+    FILETIME ft;
+    GetSystemTime(&st);
+    SystemTimeToFileTime(&st, &ft);
+    __int64 time = (((__int64)ft.dwHighDateTime) << 32) +
+        ft.dwLowDateTime;
+    return 1000L * ((time - EPOCH) / 10000000L) + st.wMilliseconds;
 #else
     struct timeval tv;
     gettimeofday(&tv, NULL);

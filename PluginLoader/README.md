@@ -1,4 +1,3 @@
-
 # PluginLoader
 Enables dynamic loading and unloading of X-Plane 11 plugins.
 
@@ -9,4 +8,4 @@ The loader looks for any dll files in its directory and attempts to load them as
 The plugin also adds the command _Plugin/Reload_ to XP11 that unloads all loaded plugins from memory and then reloads them from their respective dll file from disk.
 
 
-![alt text](https://raw.githubusercontent.com/smiley22/PluginLoader/master/loader.png "PluginLoader")
+![alt text](image.jpg?raw=true)
