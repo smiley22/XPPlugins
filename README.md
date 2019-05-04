@@ -2,10 +2,10 @@
 A collection of various small plugins for X-Plane 11 that mostly improve usability.
 
 It currently includes
-* [ToggleMouseLook](/tree/master/ToggleMouseLook)<br> Adds new commands that mimic the mouse look behaviour of Prepar3D.
-* [BetterMouseYoke](/tree/master/BetterMouseLook)<br> Removes the centered + sign with the squared box around it and adds a new command that lets you toggle mouse yoke control on or off.
-* [CycleQuickLooks](/tree/master/CycleQuickLooks)<br> Adds two new commands for cycling through a plane's configured quick looks.
-* [PluginLoader](/tree/master/PluginLoader)<br> Enables dynamic loading and unloading of X-Plane 11 plugins under Windows.
+* [ToggleMouseLook](ToggleMouseLook)<br> Adds new commands that mimic the mouse look behaviour of Prepar3D.
+* [BetterMouseYoke](BetterMouseLook)<br> Removes the centered + sign with the squared box around it and adds a new command that lets you toggle mouse yoke control on or off.
+* [CycleQuickLooks](CycleQuickLooks)<br> Adds two new commands for cycling through a plane's configured quick looks.
+* [PluginLoader](PluginLoader)<br> Enables dynamic loading and unloading of X-Plane 11 plugins under Windows.
 
 ### Building
 
