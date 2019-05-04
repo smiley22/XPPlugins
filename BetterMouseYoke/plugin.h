@@ -1,3 +1,12 @@
+/**
+ * BetterMouseYoke - X-Plane 11 Plugin
+ *
+ * Does away with X-Plane's idiotic centered little box for mouse steering and
+ * replaces it with a more sane system for those who, for whatever reason,
+ * want to or have to use the mouse for flying.
+ *
+ * Copyright 2019 Torben Könke.
+ */
 #ifndef _PLUGIN_H_
 #define _PLUGIN_H_
 

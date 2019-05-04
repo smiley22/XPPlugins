@@ -1,3 +1,12 @@
+/**
+ * Utility library for X-Plane 11 Plugins.
+ *
+ * Static library containing common functionality for stuff like logging and
+ * dealing with configuration files. Linked against by most plugins in the
+ * solution.
+ *
+ * Copyright 2019 Torben Könke.
+ */
 #include "util.h"
 
 static FMOD_SYSTEM *fmod_sys;

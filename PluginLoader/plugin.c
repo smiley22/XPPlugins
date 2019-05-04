@@ -13,6 +13,7 @@
 #define PLUGIN_SIG          "S22.PluginLoader"
 #define PLUGIN_DESCRIPTION  "Implements a command for reloading plugin Dlls " \
                             "on-the-fly."
+#define PLUGIN_VERSION      "1.1"
 
 #define MAX_PLUGINS         20
 static plugin_t plugins[MAX_PLUGINS];
@@ -31,7 +32,8 @@ static char info[3][128];
  * its callbacks.
  */
 PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
-    strcpy(name, PLUGIN_NAME);
+    /* SDK docs state buffers are at least 256 bytes. */
+    sprintf(name, "%s (v%s)", PLUGIN_NAME, PLUGIN_VERSION);
     strcpy(sig, PLUGIN_SIG);
     strcpy(desc, PLUGIN_DESCRIPTION);
     /* Don't invoke plugins own enable functions just yet because we're going

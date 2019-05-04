@@ -1,4 +1,4 @@
-/*
+/**
  * CycleQuickLooks - X-Plane 11 Plugin
  *
  * Adds two new commands for cycling through a plane's configured quick
@@ -10,10 +10,11 @@
 #include "../XP/XPLMPlanes.h"
 #include <stdlib.h>
 
-#define PLUGIN_NAME         "Cycle Quick Looks"
+#define PLUGIN_NAME         "CycleQuickLooks"
 #define PLUGIN_SIG          "S22.CycleQuickLooks"
 #define PLUGIN_DESCRIPTION  "Adds two new commands for cycling through a plane's " \
                             "configured quick looks."
+#define PLUGIN_VERSION      "1.0"
 
 #define MAX_QUICK_LOOKS     20
 static XPLMCommandRef cycle_forward;
@@ -25,15 +26,16 @@ static int current;
 int cycle_quick_look_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref);
 int get_quick_looks(int *buf, int buf_size);
 
-/*
-* X-Plane 11 Plugin Entry Point.
-*
-* Called when a plugin is initially loaded into X-Plane 11. If 0 is returned,
-* the plugin will be unloaded immediately with no further calls to any of
-* its callbacks.
-*/
+/**
+ * X-Plane 11 Plugin Entry Point.
+ *
+ * Called when a plugin is initially loaded into X-Plane 11. If 0 is returned,
+ * the plugin will be unloaded immediately with no further calls to any of
+ * its callbacks.
+ */
 PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
-    strcpy(name, PLUGIN_NAME);
+    /* SDK docs state buffers are at least 256 bytes. */
+    sprintf(name, "%s (v%s)", PLUGIN_NAME, PLUGIN_VERSION);
     strcpy(sig, PLUGIN_SIG);
     strcpy(desc, PLUGIN_DESCRIPTION);
 
@@ -41,20 +43,20 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
 }
 
 /**
-* X-Plane 11 Plugin Callback
-*
-* Called when the plugin is about to be unloaded from X-Plane 11.
-*/
+ * X-Plane 11 Plugin Callback
+ *
+ * Called when the plugin is about to be unloaded from X-Plane 11.
+ */
 PLUGIN_API void XPluginStop(void) {
     /* nothing to do here */
 }
 
 /**
-* X-Plane 11 Plugin Callback
-*
-* Called when the plugin is about to be enabled. Return 1 if the plugin
-* started successfully, otherwise 0.
-*/
+ * X-Plane 11 Plugin Callback
+ *
+ * Called when the plugin is about to be enabled. Return 1 if the plugin
+ * started successfully, otherwise 0.
+ */
 PLUGIN_API int XPluginEnable(void) {
     cycle_forward = cmd_create("CycleQuickLooks/Forward",
         "Cycle forward to next quick look", cycle_quick_look_cb, 0);
@@ -64,20 +66,20 @@ PLUGIN_API int XPluginEnable(void) {
 }
 
 /**
-* X-Plane 11 Plugin Callback
-*
-* Called when the plugin is about to be disabled.
-*/
+ * X-Plane 11 Plugin Callback
+ *
+ * Called when the plugin is about to be disabled.
+ */
 PLUGIN_API void XPluginDisable(void) {
     cmd_free(cycle_forward);
     cmd_free(cycle_backward);
 }
 
 /**
-* X-Plane 11 Plugin Callback
-*
-* Called when a message is sent to the plugin by X-Plane 11 or another plugin.
-*/
+ * X-Plane 11 Plugin Callback
+ *
+ * Called when a message is sent to the plugin by X-Plane 11 or another plugin.
+ */
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
     if (from != XPLM_PLUGIN_XPLANE)
         return;
@@ -85,7 +87,7 @@ PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
         int index = (int) param;
         /* user's plane */
         if (index == 0) {
-            /* we cannot call this from XPluginEnable because at that point
+            /* We cannot call this from XPluginEnable because at that point
                XPLMGetNthAircraftModel won't return any paths yet...*/
             num_quick_looks = get_quick_looks(quick_looks, MAX_QUICK_LOOKS);
             _log("loaded %i quick looks", num_quick_looks);
@@ -93,13 +95,14 @@ PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
     }
 }
 
-/*
-* Gets the list of quick-looks configured for the current plane.
-*/
+/**
+ * Gets the list of quick-looks configured for the current plane. Returns
+ * the number of quick-looks found.
+ */
 int get_quick_looks(int *buf, int buf_size) {
     char name[256], path[512];
     XPLMGetNthAircraftModel(0, name, path);
-    /* overwrite .acf extension to get path for _prefs file */
+    /* Overwrite .acf extension to get path for _prefs file. */
     char *p = strrchr(path, '.');
     if (!p) {
         _log("unexpected aircraft path: %s", path);

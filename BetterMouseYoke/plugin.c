@@ -1,4 +1,4 @@
-/*
+/**
  * BetterMouseYoke - X-Plane 11 Plugin
  *
  * Does away with X-Plane's idiotic centered little box for mouse steering and
@@ -9,11 +9,12 @@
  */
 #include "plugin.h"
 
-#define PLUGIN_NAME         "Better Mouse Yoke"
+#define PLUGIN_NAME         "BetterMouseYoke"
 #define PLUGIN_SIG          "S22.BetterMouseYoke"
 #define PLUGIN_DESCRIPTION  "Does away with X-Plane's idiotic centered little box " \
                             "for mouse steering that has caused much grieve and "   \
                             "countless loss of virtual lives."
+#define PLUGIN_VERSION      "1.1"
 
 static XPLMCommandRef toggle_yoke_control;
 static XPLMDataRef yoke_pitch_ratio;
@@ -25,7 +26,7 @@ static int screen_height;
 static int yoke_control_enabled;
 static float magenta[] = { 1.0f, 0, 1.0f };
 
-/*
+/**
  * X-Plane 11 Plugin Entry Point.
  *
  * Called when a plugin is initially loaded into X-Plane 11. If 0 is returned,
@@ -33,7 +34,8 @@ static float magenta[] = { 1.0f, 0, 1.0f };
  * its callbacks.
  */
 PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
-    strcpy(name, PLUGIN_NAME);
+    /* SDK docs state buffers are at least 256 bytes. */
+    sprintf(name, "%s (v%s)", PLUGIN_NAME, PLUGIN_VERSION);
     strcpy(sig, PLUGIN_SIG);
     strcpy(desc, PLUGIN_DESCRIPTION);
 
@@ -133,7 +135,7 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
 }
 
 int draw_cb(XPLMDrawingPhase phase, int before, void *ref) {
-    /* show a text indication in top left corner of screen */
+    /* Show a little text indication in top left corner of screen. */
     if (yoke_control_enabled) {
         XPLMDrawString(magenta, 20, screen_height - 40, "MOUSE YOKE CONTROL",
             NULL, xplmFont_Proportional);
@@ -151,6 +153,6 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
     float yoke_pitch = 1 - 2 * (m_y / (float)screen_height);
     XPLMSetDataf(yoke_roll_ratio, yoke_roll);
     XPLMSetDataf(yoke_pitch_ratio, yoke_pitch);
-    /* Call every frame */
+    /* Call us again next frame. */
     return -1.0f;
 }
