@@ -62,33 +62,33 @@
 #define Value_Unit_TimeStart        (1<<30) /* 1/10000000 of second */
 #define Value_Unit_Label            (1<<31) /* ARINC 429 label */
 
-typedef unsigned int(__stdcall *SharedDataVersionProc)();
-typedef void(__stdcall *SharedDataUpdateProc)(double step, void *tag);
-typedef void(__stdcall *SharedDataAddUpdateProc)(SharedDataUpdateProc proc,
+typedef unsigned int(*SharedDataVersionProc)();
+typedef void(*SharedDataUpdateProc)(double step, void *tag);
+typedef void(*SharedDataAddUpdateProc)(SharedDataUpdateProc proc,
     void *tag);
-typedef void(__stdcall *SharedDataDelUpdateProc)(SharedDataUpdateProc proc,
+typedef void(*SharedDataDelUpdateProc)(SharedDataUpdateProc proc,
     void *tag);
-typedef unsigned int(__stdcall *SharedValuesCountProc)();
-typedef int(__stdcall *SharedValueIdByIndexProc)(unsigned int index);
-typedef int(__stdcall *SharedValueIdByNameProc)(const char *name);
-typedef const char *(__stdcall *SharedValueNameProc)(int id);
-typedef const char *(__stdcall *SharedValueDescProc)(int id);
-typedef unsigned int(__stdcall *SharedValueTypeProc)(int id);
-typedef unsigned int(__stdcall *SharedValueFlagsProc)(int id);
-typedef unsigned int(__stdcall *SharedValueUnitsProc)(int id);
-typedef int(__stdcall *SharedValueParentProc)(int id);
-typedef void(__stdcall *SharedValueSetProc)(int id, const void *src);
-typedef void(__stdcall *SharedValueGetProc)(int id, void *dst);
-typedef unsigned int(__stdcall *SharedValueGetSizeProc)(int id);
-typedef void(__stdcall *SharedValueReaderProc)(void *dst, unsigned int size,
+typedef unsigned int(*SharedValuesCountProc)();
+typedef int(*SharedValueIdByIndexProc)(unsigned int index);
+typedef int(*SharedValueIdByNameProc)(const char *name);
+typedef const char *(*SharedValueNameProc)(int id);
+typedef const char *(*SharedValueDescProc)(int id);
+typedef unsigned int(*SharedValueTypeProc)(int id);
+typedef unsigned int(*SharedValueFlagsProc)(int id);
+typedef unsigned int(*SharedValueUnitsProc)(int id);
+typedef int(*SharedValueParentProc)(int id);
+typedef void(*SharedValueSetProc)(int id, const void *src);
+typedef void(*SharedValueGetProc)(int id, void *dst);
+typedef unsigned int(*SharedValueGetSizeProc)(int id);
+typedef void(*SharedValueReaderProc)(void *dst, unsigned int size,
     void *tag);
-typedef void(__stdcall *SharedValueWriterProc)(const void *src,
+typedef void(*SharedValueWriterProc)(const void *src,
     unsigned int size, void *tag);
-typedef int(__stdcall *SharedValueObjectLoadStateProc)(int id,
+typedef int(*SharedValueObjectLoadStateProc)(int id,
     SharedValueReaderProc src, void *tag);
-typedef void(__stdcall *SharedValueObjectSaveStateProc)(int id,
+typedef void(*SharedValueObjectSaveStateProc)(int id,
     SharedValueWriterProc dst, void *tag);
-typedef int(__stdcall *SharedValueObjectNewValueProc)(int id,
+typedef int(*SharedValueObjectNewValueProc)(int id,
     const char *name, const char *desc, void *ptr, unsigned int type,
     unsigned int flags, unsigned int units);
 

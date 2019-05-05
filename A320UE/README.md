@@ -10,8 +10,8 @@ More specifically, it adds
 * Commands for gradually moving thrust levers between FULLREV and TOGA continuously
 
 
-#### Download
+### Download
 You can get the latest version [here]().
 
-#### Installation
+### Installation
 Simply extract the .zip archive into the *plugins* directory of your *FlightFactor A320 ultimate* installation, e.g. *X Plane 11\Aircraft\FlightFactor A320 ultimate\plugins*.

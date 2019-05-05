@@ -6,6 +6,7 @@ It currently includes
 * [BetterMouseYoke](BetterMouseYoke)<br> Removes the centered + sign with the squared box around it and adds a new command that lets you toggle mouse yoke control on or off.
 * [CycleQuickLooks](CycleQuickLooks)<br> Adds two new commands for cycling through a plane's configured quick looks.
 * [PluginLoader](PluginLoader)<br> Enables dynamic loading and unloading of X-Plane 11 plugins under Windows.
+* [A320UE](A320UE)<br> Adds a couple of new commands and other tweaks to the *FF A320 Ultimate* to make it even more enjoyable to fly.
 
 ### Building
 
