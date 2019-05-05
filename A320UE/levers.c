@@ -200,7 +200,6 @@ int levers_next_step(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref) {
         float newpos = pos + (ref ? 1 : -1) * amt;
         if (newpos >= -1.0 && newpos <= 1.0) {
             int after = levers_in_detent(newpos);
-            int sound = 0;
             if (before != after && after != -1) {
                 levers_set_pos(
                     lever_detents[after].pos,
@@ -226,7 +225,7 @@ static int screen_height;
 static float cyan[] = { 0, 1.0f, 1.0f };
 int draw_cb(XPLMDrawingPhase phase, int before, void *ref) {
     /* show a text indication in top left corner of screen */
-    if (!levers_message || levers_message_timeout < get_time_ms()) {
+    if (levers_message_timeout < get_time_ms()) {
         /* if not drawing anything might as well unregister the callback */
         XPLMUnregisterDrawCallback(draw_cb, xplm_Phase_Window, 0, NULL);
         draw_cb_registered = 0;
