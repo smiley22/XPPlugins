@@ -19,6 +19,7 @@
 #include "../XP/XPLMProcessing.h"
 #include "../XP/XPLMGraphics.h"
 #include "../XP/XPLMDisplay.h"
+#include <math.h>
 
 /* plugin */
 void plugin_init();
