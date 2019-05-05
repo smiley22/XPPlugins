@@ -89,7 +89,11 @@ void levers_init() {
 void levers_deinit() {
     /* uninstall command handlers */
     for (int i = 0; i < sizeof(lever_cmds) / sizeof(lever_cmds[0]); i++) {
-        cmd_free(lever_cmds[i].cmd);
+        cmd_free(
+            lever_cmds[i].cmd,
+            lever_cmds[i].cb,
+            lever_cmds[i].ref
+        );
     }
     /* need to free sound memory */
     if (click_sound)

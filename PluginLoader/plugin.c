@@ -39,7 +39,7 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
     /* Don't invoke plugins own enable functions just yet because we're going
        to get a XPluginEnable call from X-Plane after this that's going to be
        forwarded to the plugins. */
-    num_plugins = load_plugins(0);
+    load_plugins(0);
     return 1;
 }
 
@@ -77,7 +77,7 @@ PLUGIN_API void XPluginDisable(void) {
     for (int i = 0; i < num_plugins; i++) {
         plugins[i].XPluginDisable();
     }
-    cmd_free(reload);
+    cmd_free(reload, reload_cb, NULL);
     XPLMUnregisterDrawCallback(draw_cb, xplm_Phase_Window, 0, NULL);
 }
 
@@ -215,6 +215,7 @@ int load_plugins(int enable) {
     time_t t = time(NULL);
     struct tm *lt = localtime(&t);
     strftime(info[2], sizeof(info[2]), "Last reload at %d/%m/%y - %T", lt);
+    num_plugins = loaded;
     return loaded;
 }
 
@@ -232,4 +233,5 @@ void unload_plugins() {
         }
     }
     _log("%i plugins unloaded", num_plugins);
+    num_plugins = 0;
 }

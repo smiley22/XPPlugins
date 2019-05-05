@@ -71,8 +71,8 @@ PLUGIN_API int XPluginEnable(void) {
  * Called when the plugin is about to be disabled.
  */
 PLUGIN_API void XPluginDisable(void) {
-    cmd_free(cycle_forward);
-    cmd_free(cycle_backward);
+    cmd_free(cycle_forward, cycle_quick_look_cb, 0);
+    cmd_free(cycle_backward, cycle_quick_look_cb, (void*)1);
 }
 
 /**
@@ -130,7 +130,7 @@ int get_quick_looks(int *buf, int buf_size) {
 }
 
 int cycle_quick_look_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref) {
-    if (phase != xplm_CommandBegin)
+    if (phase != xplm_CommandBegin || !num_quick_looks)
         return 1;
     if (ref) {
         /* cycle backward */

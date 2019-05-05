@@ -65,8 +65,8 @@ PLUGIN_API int XPluginEnable(void) {
 * Called when the plugin is about to be disabled.
 */
 PLUGIN_API void XPluginDisable(void) {
-    cmd_free(toggle_mouse_look);
-    cmd_free(hold_mouse_look);
+    cmd_free(toggle_mouse_look, toggle_cb, NULL);
+    cmd_free(hold_mouse_look, hold_cb, NULL);
     XPLMUnregisterDrawCallback(draw_cb, xplm_Phase_Window, 0, NULL);
 }
 

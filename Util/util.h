@@ -30,7 +30,9 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <string.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#endif /* _WIN32 */
 
 #ifndef MAX_PATH
 #define MAX_PATH 512
@@ -77,7 +79,7 @@ int snd_play(snd_t s, snd_vol_t vol);
 /* cmd */
 XPLMCommandRef cmd_create(const char *name, const char *desc,
     XPLMCommandCallback_f cb, void *data);
-void cmd_free(XPLMCommandRef *cmd);
+void cmd_free(XPLMCommandRef *cmd, XPLMCommandCallback_f cb, void *data);
 
 /* time */
 long long get_time_ms();

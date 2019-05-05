@@ -17,7 +17,8 @@ XPLMCommandRef cmd_create(const char *name, const char *desc,
 
 }
 
-void cmd_free(XPLMCommandRef *cmd) {
-    /* FIXME: do we really have to provide the cb and data ptrs here again? */
-    XPLMUnregisterCommandHandler(cmd, NULL, 0, NULL);
+void cmd_free(XPLMCommandRef *cmd, XPLMCommandCallback_f cb, void *data) {
+    /* You actually have to pass in the cb and data pointer to be able to
+       unregister the handler... */
+    XPLMUnregisterCommandHandler(cmd, cb, 0, data);
 }
