@@ -11,8 +11,8 @@
 
 #define PLUGIN_NAME         "A320 Ultimate Extended"
 #define PLUGIN_SIG          "S22.A320UE"
-#define PLUGIN_DESCRIPTION  "Adds two new commands for cycling through a plane's " \
-                            "configured quick looks."
+#define PLUGIN_DESCRIPTION  "Adds a couple of new commands and small fixes to " \
+                            "make the FF A320U even more enjoyable to fly."
 #define PLUGIN_VERSION      "1.0"
 
 /**

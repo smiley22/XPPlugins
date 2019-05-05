@@ -2,7 +2,7 @@
  * PluginLoader - X-Plane 11 Plugin
  *
  * Enables dynamic loading und unloading of plugins dll so that one does not
- * need to constantly restart X-Plane 11 during development and testing
+ * need to constantly restart X-Plane 11 during development and testing of
  * plugins.
  *
  * Copyright 2019 Torben Könke. All rights reserved.
@@ -40,7 +40,6 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
        to get a XPluginEnable call from X-Plane after this that's going to be
        forwarded to the plugins. */
     num_plugins = load_plugins(0);
-
     return 1;
 }
 
