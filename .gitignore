@@ -332,3 +332,5 @@ ASALocalRun/
 /*.zip
 .DS_Store
 *.o
+/Util/util.a
+*.xpl
