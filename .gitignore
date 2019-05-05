@@ -330,3 +330,5 @@ ASALocalRun/
 .mfractor/
 *.filters
 /*.zip
+.DS_Store
+*.o

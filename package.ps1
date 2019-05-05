@@ -44,7 +44,6 @@ function createArchive($plugin, [string] $version) {
         $files = [IO.Directory]::GetFiles($data, "*.*", 'AllDirectories')
         foreach ($f in $files) {
           $t = $f.Replace($PSScriptRoot, "").TrimStart('\');
-#          $t = $t.Replace('\', '/').TrimStart('/')
           addFile $ar $t $f
         }
       }
