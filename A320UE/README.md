@@ -11,7 +11,7 @@ More specifically, it adds
 
 
 ### Download
-You can get the latest version [here]().
+You can get the latest version [here](https://github.com/smiley22/XPPlugins/releases/tag/A320UE).
 
 ### Installation
 Simply extract the .zip archive into the *plugins* directory of your *FlightFactor A320 ultimate* installation, e.g. *X Plane 11\Aircraft\FlightFactor A320 ultimate\plugins*.

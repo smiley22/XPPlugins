@@ -17,6 +17,14 @@ The absolute mouse position on the screen represents the deviation from center o
 
 Additionally, a magenta text indicator is displayed in the upper-left corner of the screen when mouse yoke control is active.
 
+
+### Download
+You can get the latest version [here](https://github.com/smiley22/XPPlugins/releases/tag/BetterMouseYoke).
+
+### Installation
+Simply extract the .zip archive into the *plugins* directory of your *X Plane 11* installation, e.g. *X Plane 11\Resources\plugins*.
+
+
 <p align="center">
   <a href="image-1.jpg?raw=true" target="_blank">
     <img title="Mouse yoke control" src="image-1.jpg?raw=true" width="860" height="503"/>

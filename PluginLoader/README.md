@@ -8,4 +8,11 @@ The loader looks for any dll files in its directory and attempts to load them as
 The plugin also adds the command _Plugin/Reload_ to XP11 that unloads all loaded plugins from memory and then reloads them from their respective dll file from disk.
 
 
+### Download
+You can get the latest version [here](https://github.com/smiley22/XPPlugins/releases/tag/PluginLoader).
+
+### Installation
+Simply extract the .zip archive into the *plugins* directory of your *X Plane 11* installation, e.g. *X Plane 11\Resources\plugins*.
+
+
 ![alt text](image.jpg?raw=true)
