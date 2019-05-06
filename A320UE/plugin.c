@@ -27,7 +27,9 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
     sprintf(name, "%s (v%s)", PLUGIN_NAME, PLUGIN_VERSION);
     strcpy(sig, PLUGIN_SIG);
     strcpy(desc, PLUGIN_DESCRIPTION);
-
+#ifdef APL
+    XPLMEnableFeature("XPLM_USE_NATIVE_PATHS", 1);
+#endif
     return 1;
 }
 
