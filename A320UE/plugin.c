@@ -13,7 +13,7 @@
 #define PLUGIN_SIG          "S22.A320UE"
 #define PLUGIN_DESCRIPTION  "Adds a couple of new commands and small fixes to " \
                             "make the FF A320U even more enjoyable to fly."
-#define PLUGIN_VERSION      "1.0"
+#define PLUGIN_VERSION      "1.1"
 
 /**
 * X-Plane 11 Plugin Entry Point.

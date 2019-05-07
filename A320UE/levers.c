@@ -201,8 +201,8 @@ int levers_next_step(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref) {
     if (step_stop)
         return 1;
     if (amt > 0) {
-        float newpos = pos + (ref ? 1 : -1) * amt;
-        if (newpos >= -1.0 && newpos <= 1.0) {
+        float newpos = min(1.0f, max(-1.0f, pos + (ref ? 1 : -1) * amt));
+        if (newpos != pos) {
             int after = levers_in_detent(newpos);
             if (before != after && after != -1) {
                 levers_set_pos(

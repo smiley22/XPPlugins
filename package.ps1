@@ -16,6 +16,7 @@ function main($plugin, $version) {
 }
 
 function createArchive($plugin, [string] $version) {
+  $dir = "$PSScriptRoot\$plugin"
   $zip = "$PSScriptRoot\${plugin}_v${version}.zip"
   __using($fs = New-Object IO.FileStream $zip, 'Create') {
     __using($ar = New-Object IO.Compression.ZipArchive $fs, 'Create') {

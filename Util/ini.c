@@ -41,7 +41,14 @@ int ini_seti(const char *name, int val) {
 }
 
 float ini_getf(const char *name, float def) {
-    
+    char *f = ini_get_path();
+#ifdef IBM
+    char buf[32];
+    ini_gets(name, buf, 32, "nan");
+    if (!strcmp(name, "nan"))
+        return def;
+    return atof(buf);
+#endif
 }
 
 int ini_setf(const char *name, float val) {
