@@ -78,8 +78,21 @@ PLUGIN_API void XPluginDisable(void) {
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
 }
 
+#ifdef APL
+void mouse_event(CGEventType type) {
+    CGEventRef ev = CGEventCreate(NULL);
+    /* this gives us the current mouse position */
+    CGPoint pos = CGEventGetLocation(ev);
+    CFRelease(ev);
+    ev = CGEventCreateMouseEvent(NULL, type, pos, kCGMouseButtonRight);
+    CGEventPost(kCGHIDEventTap, ev);
+    CFRelease(ev);
+}
+#endif
+
 int toggle_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data) {
     if (phase == xplm_CommandBegin) {
+#if IBM
         short state = GetAsyncKeyState(VK_RBUTTON);
         /* Most significant bit is set if button is being held. */
         show_hint = !(state >> 15);
@@ -88,6 +101,11 @@ int toggle_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data) {
         input.mi.dwFlags = show_hint ? MOUSEEVENTF_RIGHTDOWN :
             MOUSEEVENTF_RIGHTUP;
         SendInput(1, &input, sizeof(INPUT));
+#elif APL
+        show_hint = !show_hint;
+        mouse_event(show_hint ?
+            kCGEventRightMouseDown : kCGEventRightMouseUp);
+#endif
         /* Get screen height for offsetting text indication. */
         XPLMGetScreenSize(NULL, &screen_height);
     }
@@ -95,6 +113,7 @@ int toggle_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data) {
 }
 
 int hold_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data) {
+#if IBM
     INPUT input = { 0 };
     input.type = INPUT_MOUSE;
     switch (phase) {
@@ -112,6 +131,20 @@ int hold_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *data) {
         return 0;
     }
     SendInput(1, &input, sizeof(INPUT));
+#elif APL
+    switch (phase) {
+    case xplm_CommandBegin:
+        show_hint = 1;
+        mouse_event(kCGEventRightMouseDown);
+        /* Get screen height for offsetting text indication. */
+        XPLMGetScreenSize(NULL, &screen_height);
+        break;
+    case xplm_CommandEnd:
+        show_hint = 0;
+        mouse_event(kCGEventRightMouseUp);
+        break;
+    }
+#endif
     return 0;
 }
 

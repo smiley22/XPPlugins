@@ -33,6 +33,15 @@
 #ifndef _WIN32
 #include <sys/time.h>
 #endif /* _WIN32 */
+#ifdef APL
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif /* max */
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif /* min */
 
 #ifndef MAX_PATH
 #define MAX_PATH 512
