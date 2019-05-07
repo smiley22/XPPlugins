@@ -25,9 +25,15 @@ static char *ini_get_path() {
 }
 
 int ini_geti(const char *name, int def) {
-    char *f = ini_get_path();
 #ifdef IBM
-    return GetPrivateProfileIntA(INI_SECT_NAME, name, def, f);
+    return GetPrivateProfileIntA(INI_SECT_NAME, name, def,
+        ini_get_path());
+#else
+    char buf[32];
+    ini_gets(name, buf, 32, "nan");
+    if (!strcmp(name, "nan"))
+        return def;
+    return atoi(buf);
 #endif
 }
 
@@ -42,13 +48,11 @@ int ini_seti(const char *name, int val) {
 
 float ini_getf(const char *name, float def) {
     char *f = ini_get_path();
-#ifdef IBM
     char buf[32];
     ini_gets(name, buf, 32, "nan");
     if (!strcmp(name, "nan"))
         return def;
     return atof(buf);
-#endif
 }
 
 int ini_setf(const char *name, float val) {
@@ -59,6 +63,41 @@ void ini_gets(const char *name, char *buf, int size, const char *def) {
     char *f = ini_get_path();
 #ifdef IBM
     GetPrivateProfileStringA(INI_SECT_NAME, name, def, buf, size, f);
+#else
+    FILE *fp = fopen(f, "r");
+    if (!fp)
+        return 0;
+    char line[128];
+    while (fgets(line, sizeof(line), fp)) {
+        char *p = line;
+        while (*p && (*p == ' ' || *p == '\t'))
+            p++;
+        if (*p == '[' || *p == ';')
+            continue;
+        char *q = strchr(p, '=');
+        if (!q)
+            continue;
+        char n[128] = { 0 };
+        strncpy(n, p, q - p);
+        if (strncmp(name, n, strlen(name)))
+            continue;
+        q++;
+        while (*q && (*q == ' ' || *q == '\t'))
+            q++;
+        strcpy(n, q);
+        if((q = strrchr(n, ';')))
+            *q = '\0';
+        else {
+            q = n + strlen(n) - 1;
+            if (*q == '\n')
+                *q = '\0';
+        }
+        strcpy(buf, n);
+        fclose(fp);
+        return;
+    }
+    fclose(fp);
+    strcpy(buf, def);
 #endif
 }
 
