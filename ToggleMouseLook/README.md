@@ -1,7 +1,7 @@
 # ToggleMouseLook
 A plugin for X-Plane 11 that adds commands for better control of mouse look.
 
-The plugin adds two new commands that mimic the mouse look behaviour of Prepar3D:
+The plugin changes the behaviour of the right-mouse button so that a right-click toggles mouse look on or off. It adds two new commands that mimic the mouse look behaviour of Prepar3D:
 
 1. Press and hold the assigned key, then move the mouse to look around
 2. Press the assigned key to toggle the mouse look function ON or OFF.
