@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bindings.c" />
     <ClCompile Include="plugin.c" />
   </ItemGroup>
   <ItemGroup>

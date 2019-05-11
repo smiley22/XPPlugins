@@ -1,6 +1,6 @@
 TOPTARGETS := all clean
 
-SUBDIRS := Util CycleQuickLooks BetterMouseYoke ToggleMouseLook A320UE
+SUBDIRS := Util CycleQuickLooks BetterMouseYoke ToggleMouseLook MouseButtons A320UE
 
 $(TOPTARGETS): $(SUBDIRS)
 $(SUBDIRS):
