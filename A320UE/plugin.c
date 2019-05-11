@@ -16,12 +16,12 @@
 #define PLUGIN_VERSION      "1.1"
 
 /**
-* X-Plane 11 Plugin Entry Point.
-*
-* Called when a plugin is initially loaded into X-Plane 11. If 0 is returned,
-* the plugin will be unloaded immediately with no further calls to any of
-* its callbacks.
-*/
+ * X-Plane 11 Plugin Entry Point.
+ *
+ * Called when a plugin is initially loaded into X-Plane 11. If 0 is returned,
+ * the plugin will be unloaded immediately with no further calls to any of
+ * its callbacks.
+ */
 PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
     /* SDK docs state buffers are at least 256 bytes. */
     sprintf(name, "%s (v%s)", PLUGIN_NAME, PLUGIN_VERSION);
@@ -34,20 +34,20 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
 }
 
 /**
-* X-Plane 11 Plugin Callback
-*
-* Called when the plugin is about to be unloaded from X-Plane 11.
-*/
+ * X-Plane 11 Plugin Callback
+ *
+ * Called when the plugin is about to be unloaded from X-Plane 11.
+ */
 PLUGIN_API void XPluginStop(void) {
     /* nothing to do here */
 }
 
 /**
-* X-Plane 11 Plugin Callback
-*
-* Called when the plugin is about to be enabled. Return 1 if the plugin
-* started successfully, otherwise 0.
-*/
+ * X-Plane 11 Plugin Callback
+ *
+ * Called when the plugin is about to be enabled. Return 1 if the plugin
+ * started successfully, otherwise 0.
+ */
 PLUGIN_API int XPluginEnable(void) {
     /* This is really lame, we get called too early in the process when the
        FF API hasn't been initialized yet, so we have to keep polling until
@@ -56,20 +56,20 @@ PLUGIN_API int XPluginEnable(void) {
 }
 
 /**
-* X-Plane 11 Plugin Callback
-*
-* Called when the plugin is about to be disabled.
-*/
+ * X-Plane 11 Plugin Callback
+ *
+ * Called when the plugin is about to be disabled.
+ */
 PLUGIN_API void XPluginDisable(void) {
     /* clean up */
     plugin_deinit();
 }
 
 /**
-* X-Plane 11 Plugin Callback
-*
-* Called when a message is sent to the plugin by X-Plane 11 or another plugin.
-*/
+ * X-Plane 11 Plugin Callback
+ *
+ * Called when a message is sent to the plugin by X-Plane 11 or another plugin.
+ */
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
 }
 
