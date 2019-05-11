@@ -54,15 +54,47 @@ static int parse_modifiers(const char *s) {
             n |= MOD_SHIFT;
         else if (!strcmp(p, "ALT"))
             n |= MOD_ALT;
+        else
+            _log("Unknown modifier key %s", p);
         p = strtok(NULL, "+");
     }
     return n;
 }
 
 int bindings_init() {
-    /* look for mouse.prf in current aircrafts directory first */
-    /* otherwise take the one from plugin directory */
-    return 1;
+    /* Look for a mouse.prf for the aircraft we're flying first. */
+    char name[256], path[512];
+    XPLMGetNthAircraftModel(0, name, path);
+
+    /* Otherwise we'll look for mouse.prf in plugin directory. */
+
+
+    //
+    FILE *fp = fopen(path, "r");
+    if (!fp) {
+        _log("could not load mouse bindings from '%s'", path);
+        return 0;
+    }
+    char line[128], token[64];
+    while (fgets(line, sizeof(line), fp)) {
+        if (!strcmp("I\n", line) || !strcmp("1005 Version\n", line))
+            continue;
+        char *p = read_token(line, token, sizeof(token));
+        if (token[0] == '#')
+            continue;
+        mbinding_t *pb = &bindings[num_bindings];
+        if (!(pb->cmd = parse_mbutton(token))) {
+            _log("unknown mouse button identifier: %s", token);
+            continue;
+        }
+        p = read_token(p, token, sizeof(token));
+        pb->mod = parse_modifiers(token);
+        p = read_token(p, token, sizeof(token));
+        pb->cmd = XPLMCreateCommand(token, "");
+        num_bindings++;
+    }
+    fclose(fp);
+    return num_bindings;
 }
 
 XPLMCommandRef bindings_get(mbutton_t mbutton, int mod) {

@@ -72,19 +72,47 @@ PLUGIN_API void XPluginDisable(void) {
 * Called when a message is sent to the plugin by X-Plane 11 or another plugin.
 */
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
+    if (from != XPLM_PLUGIN_XPLANE)
+        return;
+    if (msg == XPLM_MSG_PLANE_LOADED) {
+        int index = (int)param;
+        /* user's plane */
+        if (index == 0) {
+            /* We cannot call this from XPluginEnable because at that point
+            XPLMGetNthAircraftModel won't return any paths yet...*/
+            int num_bindings = bindings_init();
+            _log("loaded %i mouse bindings", num_bindings);
+        }
+    }
 }
 
 #ifdef IBM
 static HWND xp_hwnd;
 static WNDPROC old_wnd_proc;
 
+static mbutton_t wm_to_mbutton(UINT msg, WPARAM wParam, LPARAM lParam) {
+    return M_NONE;
+}
+
 LRESULT CALLBACK xp_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     LPARAM lParam) {
-    switch (msg) {
-    case WM_MBUTTONDOWN:
-        break;
-    case WM_MBUTTONUP:
-        break;
+    XPLMCommandRef cmd = bindings_get(
+        wm_to_mbutton(msg, wParam, lParam),
+        0
+    );
+    if (cmd) {
+        switch (msg) {
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_XBUTTONDOWN:
+            XPLMCommandBegin(cmd);
+            break;
+        case WM_RBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_XBUTTONUP:
+            XPLMCommandEnd(cmd);
+            break;
+        }
     }
     return CallWindowProcA(old_wnd_proc, hwnd, msg, wParam, lParam);
 }
