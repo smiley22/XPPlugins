@@ -1,11 +1,11 @@
 /**
-* MouseButtons - X-Plane 11 Plugin
-*
-* Enables the use of extra mouse buttons and allows the right mouse button
-* and mouse wheel to be re-assigned to arbitrary commands.
-*
-* Copyright 2019 Torben Könke.
-*/
+ * MouseButtons - X-Plane 11 Plugin
+ *
+ * Enables the use of extra mouse buttons and allows the right mouse button
+ * and mouse wheel to be re-assigned to arbitrary commands.
+ *
+ * Copyright 2019 Torben Könke.
+ */
 #include "plugin.h"
 
 typedef struct {
@@ -54,8 +54,6 @@ static int parse_modifiers(char *s) {
             n |= M_MOD_SHIFT;
         else if (!strcmp(p, "ALT"))
             n |= M_MOD_ALT;
-        else
-            _log("Unknown modifier key %s", p);
         p = strtok(NULL, "+");
     }
     return n;
@@ -74,16 +72,17 @@ static char *read_token(char *p, char *buf, int size) {
 
 int bindings_init() {
     /* Look for a mouse.prf for the aircraft we're flying first. */
-    char name[256], path[512];
-    XPLMGetNthAircraftModel(0, name, path);
-    XPLMGetSystemPath(path);
-    sprintf(path, "%s/Output/preferences/control profiles/%s - Mouse.prf",
-        path, name);
-    FILE *fp = fopen(path, "r");
+    char name[256], path[512], buf[512];
+    XPLMGetNthAircraftModel(0, name, buf);
+    get_plugin_dir(path, sizeof(path));
+    char *p = strrchr(name, '.');
+    if (p)
+        strcpy(p + 1, "prf");
+    sprintf(buf, "%s/%s", path, name);
+    FILE *fp = fopen(buf, "r");
     if (!fp) {
         /* Otherwise probe for mouse.prf in plugin directory. */
         _log("could not load mouse bindings for aircraft from '%s'", path);
-        get_plugin_dir(path, sizeof(path));
         sprintf(path, "%s/mouse.prf", path);
         if (!(fp = fopen(path, "r"))) {
             _log("could not load mouse bindings from '%s'", path);
@@ -106,7 +105,7 @@ int bindings_init() {
         p = read_token(p, token, sizeof(token));
         pb->mod = parse_modifiers(token);
         p = read_token(p, token, sizeof(token));
-        pb->cmd = XPLMCreateCommand(token, "");
+        pb->cmd = XPLMFindCommand(token);
         num_bindings++;
     }
     fclose(fp);

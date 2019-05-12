@@ -7,7 +7,6 @@
  * Copyright 2019 Torben Könke.
  */
 #include "../Util/util.h"
-#include "../XP/XPLMPlanes.h"
 #include <stdlib.h>
 
 #define PLUGIN_NAME         "CycleQuickLooks"
@@ -88,7 +87,7 @@ PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
     if (msg == XPLM_MSG_PLANE_LOADED) {
         int index = (int) param;
         /* user's plane */
-        if (index == 0) {
+        if (index == XPLM_USER_AIRCRAFT) {
             /* We cannot call this from XPluginEnable because at that point
                XPLMGetNthAircraftModel won't return any paths yet...*/
             num_quick_looks = get_quick_looks(quick_looks, MAX_QUICK_LOOKS);
@@ -147,7 +146,7 @@ int cycle_quick_look_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref) {
     snprintf(buf, sizeof(buf), "sim/view/quick_look_%i",
         quick_looks[current]);
     _debug("exec '%s'", buf);
-    XPLMCommandRef cmd_ref = XPLMCreateCommand(buf, "");
+    XPLMCommandRef cmd_ref = XPLMFindCommand(buf);
     if (cmd_ref)
         XPLMCommandOnce(cmd_ref);
     return 1;

@@ -25,6 +25,7 @@
 #include "../XP/XPLMUtilities.h"
 #include "../XP/XPLMDataAccess.h"
 #include "../XP/XPLMPlugin.h"
+#include "../XP/XPLMPlanes.h"
 #include "../FMOD/fmod.h"
 #include <stdio.h>
 #include <stdbool.h>

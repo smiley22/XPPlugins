@@ -27,6 +27,9 @@ typedef enum {
 #define M_MOD_SHIFT   (1 << 1)
 #define M_MOD_ALT     (1 << 2)
 
+#define M_STATE_DOWN  (1 << 0)
+#define M_STATE_UP    (1 << 1)
+
 /* bindings */
 int bindings_init();
 XPLMCommandRef bindings_get(mbutton_t mbutton, int mod);
