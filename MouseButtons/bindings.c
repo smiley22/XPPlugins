@@ -44,16 +44,16 @@ static mbutton_t parse_mbutton(const char *s) {
     return M_NONE;
 }
 
-static int parse_modifiers(const char *s) {
+static int parse_modifiers(char *s) {
     int n = 0;
     char *p = strtok(s, "+");
     while (p) {
         if (!strcmp(p, "CTRL"))
-            n |= MOD_CTRL;
+            n |= M_MOD_CTRL;
         else if (!strcmp(p, "SHIFT"))
-            n |= MOD_SHIFT;
+            n |= M_MOD_SHIFT;
         else if (!strcmp(p, "ALT"))
-            n |= MOD_ALT;
+            n |= M_MOD_ALT;
         else
             _log("Unknown modifier key %s", p);
         p = strtok(NULL, "+");
@@ -61,20 +61,36 @@ static int parse_modifiers(const char *s) {
     return n;
 }
 
+static char *read_token(char *p, char *buf, int size) {
+    /* Skip whitespaces, if any. */
+    while (*p == ' ' || *p == '\t')
+        p++;
+    int i = 0;
+    while (*p && *p != ' ' && *p != '\t' && *p != '\n' && i < (size - 1))
+        buf[i++] = *p++;
+    buf[i] = '\0';
+    return p;
+}
+
 int bindings_init() {
     /* Look for a mouse.prf for the aircraft we're flying first. */
     char name[256], path[512];
     XPLMGetNthAircraftModel(0, name, path);
-
-    /* Otherwise we'll look for mouse.prf in plugin directory. */
-
-
-    //
+    XPLMGetSystemPath(path);
+    sprintf(path, "%s/Output/preferences/control profiles/%s - Mouse.prf",
+        path, name);
     FILE *fp = fopen(path, "r");
     if (!fp) {
-        _log("could not load mouse bindings from '%s'", path);
-        return 0;
+        /* Otherwise probe for mouse.prf in plugin directory. */
+        _log("could not load mouse bindings for aircraft from '%s'", path);
+        get_plugin_dir(path, sizeof(path));
+        sprintf(path, "%s/mouse.prf", path);
+        if (!(fp = fopen(path, "r"))) {
+            _log("could not load mouse bindings from '%s'", path);
+            return 0;
+        }
     }
+    num_bindings = 0;
     char line[128], token[64];
     while (fgets(line, sizeof(line), fp)) {
         if (!strcmp("I\n", line) || !strcmp("1005 Version\n", line))
@@ -83,7 +99,7 @@ int bindings_init() {
         if (token[0] == '#')
             continue;
         mbinding_t *pb = &bindings[num_bindings];
-        if (!(pb->cmd = parse_mbutton(token))) {
+        if (!(pb->mbutton = parse_mbutton(token))) {
             _log("unknown mouse button identifier: %s", token);
             continue;
         }

@@ -23,9 +23,9 @@ typedef enum {
     M_W_RIGHT
 } mbutton_t;
 
-#define MOD_CTRL    (1 << 0)
-#define MOD_SHIFT   (1 << 1)
-#define MOD_ALT     (1 << 2)
+#define M_MOD_CTRL    (1 << 0)
+#define M_MOD_SHIFT   (1 << 1)
+#define M_MOD_ALT     (1 << 2)
 
 /* bindings */
 int bindings_init();
