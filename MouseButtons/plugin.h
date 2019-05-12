@@ -37,6 +37,9 @@ XPLMCommandRef bindings_get(mbutton_t mbutton, int mod);
 #ifdef IBM
 int hook_wnd_proc();
 int unhook_wnd_proc();
+#elif APL
+int tap_events();
+int untap_events();
 #endif
 
 #endif /* _PLUGIN_H_ */

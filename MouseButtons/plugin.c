@@ -51,6 +51,10 @@ PLUGIN_API int XPluginEnable(void) {
     if (!hook_wnd_proc()) {
         _log("could not hook wnd proc");
     }
+#elif APL
+    if (!tap_events()) {
+        _log("could not tap events");
+}
 #endif
     return 1;
 }
@@ -63,6 +67,8 @@ PLUGIN_API int XPluginEnable(void) {
 PLUGIN_API void XPluginDisable(void) {
 #ifdef IBM
     unhook_wnd_proc();
+#elif APL
+    untap_events();
 #endif
 }
 
@@ -112,10 +118,11 @@ static mbutton_t wm_to_mbutton(UINT msg, WPARAM wParam, int *state) {
         return (HIWORD(wParam) & XBUTTON1) ? M_FORWARD : M_BACKWARD;
     case WM_MOUSEWHEEL:
         *state = M_STATE_DOWN | M_STATE_UP;
-        return HIWORD(wParam) > 0 ? M_W_FORWARD : M_W_BACKWARD;
+        return GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? M_W_FORWARD :
+            M_W_BACKWARD;
     case WM_MOUSEHWHEEL:
         *state = M_STATE_DOWN | M_STATE_UP;
-        return HIWORD(wParam) > 0 ? M_W_RIGHT : M_W_LEFT;
+        return GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? M_W_RIGHT : M_W_LEFT;
     default:
         return M_NONE;
     }
@@ -168,6 +175,59 @@ int unhook_wnd_proc() {
         _log("could not restore window procedure (%i)", GetLastError());
         return 0;
     }
+    return 1;
+}
+#elif APL
+static CFMachPortRef event_tap;
+static CFRunLoopSourceRef loop_src;
+
+CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
+    CGEventRef ev, void *data) {
+    switch (type) {
+    case kCGEventRightMouseDown:
+        break;
+    case kCGEventRightMouseUp:
+        break;
+    }
+    return ev;
+}
+
+int tap_events() {
+    ProcessSerialNumber psn;
+    OSErr err = GetCurrentProcess(&psn);
+    if (err != noErr) {
+        _log("could not get psn (%i)", err);
+        return 0;
+    }
+    /* CGEventTapCreateForPid has only been added with 10.11 */
+    event_tap = CGEventTapCreateForPSN(&psn, kCGHeadInsertEventTap,
+        kCGEventTapOptionDefault, CGEventMaskBit(kCGEventRightMouseDown) |
+        CGEventMaskBit(kCGEventRightMouseUp), cg_event_cb, NULL);
+    if (!event_tap) {
+        _log("could not create event tap");
+        return 0;
+    }
+    loop_src = CFMachPortCreateRunLoopSource(NULL, event_tap, 0);
+    if (!loop_src) {
+        _log("could not create run-loop source");
+        CFRelease(event_tap);
+        return 0;
+    }
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), loop_src,
+        kCFRunLoopCommonModes);
+    CGEventTapEnable(event_tap, true);
+    return 1;
+}
+
+int untap_events() {
+    if (!event_tap)
+        return 1;
+    CFRunLoopRemoveSource(CFRunLoopGetCurrent(), loop_src,
+        kCFRunLoopCommonModes);
+    CGEventTapEnable(event_tap, false);
+    /* Releasing the mach port also releases the tap. */
+    CFRelease(event_tap);
+    event_tap = NULL;
     return 1;
 }
 #endif
