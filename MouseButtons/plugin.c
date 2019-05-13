@@ -54,7 +54,7 @@ PLUGIN_API int XPluginEnable(void) {
 #elif APL
     if (!tap_events()) {
         _log("could not tap events");
-}
+    }
 #endif
     return 1;
 }
@@ -181,14 +181,74 @@ int unhook_wnd_proc() {
 static CFMachPortRef event_tap;
 static CFRunLoopSourceRef loop_src;
 
-CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
-    CGEventRef ev, void *data) {
+static mbutton_t ev_to_mbutton(CGEventType type, CGEventRef ev, int *state) {
+    int n;
     switch (type) {
     case kCGEventRightMouseDown:
-        break;
+        *state = M_STATE_DOWN;
+        return M_RIGHT;
     case kCGEventRightMouseUp:
-        break;
+        *state = M_STATE_UP;
+        return M_RIGHT;
+    case kCGEventOtherMouseDown:
+    case kCGEventOtherMouseUp:
+        *state = kCGEventOtherMouseDown ? M_STATE_DOWN : M_STATE_UP;
+        n = CGEventGetIntegerValueField(ev, kCGMouseEventButtonNumber);
+        switch (n) {
+        case kCGMouseButtonCenter:
+            return M_MIDDLE;
+        case kCGMouseButtonForward:
+            return M_FORWARD;
+        case kCGMouseButtonBackward:
+            return M_BACKWARD;
+        default:
+            _debug("unknown mouse button %i", n);
+            return M_NONE;
+        }
+    case kCGEventScrollWheel:
+        *state = M_STATE_DOWN | M_STATE_UP;
+        n = CGEventGetIntegerValueField(ev,
+            kCGScrollWheelEventDeltaAxis1);
+        if (n != 0)
+            return n > 0 ? M_W_FORWARD : M_W_BACKWARD;
+        n = CGEventGetIntegerValueField(ev,
+            kCGScrollWheelEventDeltaAxis2);
+        if (n != 0)
+            return n > 0 ? M_W_RIGHT : M_W_LEFT;
+        return M_NONE;
+    default:
+        return M_NONE;
     }
+}
+
+CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
+    CGEventRef ev, void *data) {
+    int state;
+    mbutton_t mbutton = ev_to_mbutton(type, ev, &state);
+    if (mbutton != M_NONE) {
+        int mod = 0;
+        /* Figure out state of ALT, CONTROL and SHIFT keys. */
+        CGEventFlags flags = CGEventSourceFlagsState(
+            kCGEventSourceStateHIDSystemState);
+        if (flags & kCGEventFlagMaskControl)
+            mod |= M_MOD_CTRL;
+        if (flags & kCGEventFlagMaskShift)
+            mod |= M_MOD_SHIFT;
+        if (flags & kCGEventFlagMaskAlternate)
+            mod |= M_MOD_ALT;
+        XPLMCommandRef cmd = bindings_get(mbutton, mod);
+        if (cmd) {
+            if (state & M_STATE_DOWN)
+                XPLMCommandBegin(cmd);
+            if (state & M_STATE_UP)
+                XPLMCommandEnd(cmd);
+            return NULL;
+        }
+    }
+    int button = CGEventGetIntegerValueField(ev, kCGMouseEventButtonNumber);
+    int vdelta = CGEventGetIntegerValueField(ev, kCGScrollWheelEventDeltaAxis1);
+    int hdelta = CGEventGetIntegerValueField(ev, kCGScrollWheelEventDeltaAxis2);
+    _log("type = %i | button = %i | vdelta = %i | hdelta = %i", type, button, vdelta, hdelta);
     return ev;
 }
 
@@ -201,8 +261,12 @@ int tap_events() {
     }
     /* CGEventTapCreateForPid has only been added with 10.11 */
     event_tap = CGEventTapCreateForPSN(&psn, kCGHeadInsertEventTap,
-        kCGEventTapOptionDefault, CGEventMaskBit(kCGEventRightMouseDown) |
-        CGEventMaskBit(kCGEventRightMouseUp), cg_event_cb, NULL);
+        kCGEventTapOptionDefault,
+        CGEventMaskBit(kCGEventRightMouseDown) |
+        CGEventMaskBit(kCGEventRightMouseUp)   |
+        CGEventMaskBit(kCGEventOtherMouseDown) |
+        CGEventMaskBit(kCGEventOtherMouseUp)   |
+        CGEventMaskBit(kCGEventScrollWheel), cg_event_cb, NULL);
     if (!event_tap) {
         _log("could not create event tap");
         return 0;

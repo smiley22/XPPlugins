@@ -33,6 +33,7 @@
 #include <string.h>
 #ifndef _WIN32
 #include <sys/time.h>
+#define _stricmp strcasecmp
 #endif /* _WIN32 */
 #ifdef APL
 #include <ApplicationServices/ApplicationServices.h>

@@ -38,6 +38,19 @@ XPLMCommandRef bindings_get(mbutton_t mbutton, int mod);
 int hook_wnd_proc();
 int unhook_wnd_proc();
 #elif APL
+/**
+ * Quartz supports up to 32 mouse buttons. The first 3 buttons
+ * are specified using constants. Additional buttons are specified
+ * in USB order using the integers 3 to 31.
+ * XButton1 and XButton2 appear to be mapped to integer 3 and 4.
+ */
+#ifndef kCGMouseButtonForward
+#define kCGMouseButtonForward 3
+#endif
+#ifndef kCGMouseButtonBackward
+#define kCGMouseButtonBackward 4
+#endif
+
 int tap_events();
 int untap_events();
 #endif
