@@ -138,6 +138,16 @@ LRESULT CALLBACK xp_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             mod |= M_MOD_CTRL;
         if (wParam & MK_SHIFT)
             mod |= M_MOD_SHIFT;
+        if (wParam & MK_LBUTTON)
+            mod |= M_MOD_LMB;
+        if ((wParam & MK_RBUTTON) && (mbutton != M_RIGHT))
+            mod |= M_MOD_RMB;
+        if ((wParam  & MK_MBUTTON) && (mbutton != M_MIDDLE))
+            mod |= M_MOD_MMB;
+        if ((wParam & MK_XBUTTON1) && (mbutton != M_FORWARD))
+            mod |= M_MOD_FMB;
+        if ((wParam & MK_XBUTTON2) && (mbutton != M_BACKWARD))
+            mod |= M_MOD_BMB;
         if (GetKeyState(VK_MENU) < 0)
             mod |= M_MOD_ALT;
         XPLMCommandRef cmd = bindings_get(mbutton, mod);

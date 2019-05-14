@@ -26,6 +26,16 @@ typedef enum {
 #define M_MOD_CTRL    (1 << 0)
 #define M_MOD_SHIFT   (1 << 1)
 #define M_MOD_ALT     (1 << 2)
+/* Left Mouse Button */
+#define M_MOD_LMB     (1 << 3)
+/* Right Mouse Button */
+#define M_MOD_RMB     (1 << 4)
+/* Middle Mouse Button */
+#define M_MOD_MMB     (1 << 5)
+/* Forward Mouse Button (X1) */
+#define M_MOD_FMB     (1 << 6)
+/* Backward Mouse Button (X2) */
+#define M_MOD_BMB     (1 << 7)
 
 #define M_STATE_DOWN  (1 << 0)
 #define M_STATE_UP    (1 << 1)

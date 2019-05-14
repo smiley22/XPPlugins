@@ -44,16 +44,33 @@ static mbutton_t parse_mbutton(const char *s) {
     return M_NONE;
 }
 
+typedef struct {
+    int flag;
+    const char *name;
+} flag_map_t;
+
+static flag_map_t flags[] = {
+    { M_MOD_CTRL,   "CTRL"  },
+    { M_MOD_SHIFT,  "SHIFT" },
+    { M_MOD_ALT,    "ALT"   },
+    { M_MOD_LMB,    "LMB"   },
+    { M_MOD_RMB,    "RMB"   },
+    { M_MOD_MMB,    "MMB"   },
+    { M_MOD_FMB,    "FMB"   },
+    { M_MOD_BMB,    "BMB"   }
+};
+static int num_flags = sizeof(flags) / sizeof(flags[0]);
+
 static int parse_modifiers(char *s) {
     int n = 0;
     char *p = strtok(s, "+");
     while (p) {
-        if (!strcmp(p, "CTRL"))
-            n |= M_MOD_CTRL;
-        else if (!strcmp(p, "SHIFT"))
-            n |= M_MOD_SHIFT;
-        else if (!strcmp(p, "ALT"))
-            n |= M_MOD_ALT;
+        for (int i = 0; i < num_flags; i++) {
+            if (!strcmp(p, flags[i].name)) {
+                n |= flags[i].flag;
+                break;
+            }
+        }
         p = strtok(NULL, "+");
     }
     return n;
