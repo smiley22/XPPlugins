@@ -13,6 +13,7 @@
 
 typedef enum {
     M_NONE,
+    M_LEFT,
     M_RIGHT,
     M_MIDDLE,
     M_FORWARD,

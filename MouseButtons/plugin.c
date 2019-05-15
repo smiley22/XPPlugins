@@ -98,6 +98,12 @@ static WNDPROC old_wnd_proc;
 
 static mbutton_t wm_to_mbutton(UINT msg, WPARAM wParam, int *state) {
     switch (msg) {
+    case WM_LBUTTONDOWN:
+        *state = M_STATE_DOWN;
+        return M_LEFT;
+    case WM_LBUTTONUP:
+        *state = M_STATE_UP;
+        return M_LEFT;
     case WM_RBUTTONDOWN:
         *state = M_STATE_DOWN;
         return M_RIGHT;
@@ -194,6 +200,12 @@ static CFRunLoopSourceRef loop_src;
 static mbutton_t ev_to_mbutton(CGEventType type, CGEventRef ev, int *state) {
     int n;
     switch (type) {
+    case kCGEventLeftMouseDown:
+        *state = M_STATE_DOWN;
+        return M_LEFT;
+    case kCGEventLeftMouseUp:
+        *state = M_STATE_UP;
+        return M_LEFT;
     case kCGEventRightMouseDown:
         *state = M_STATE_DOWN;
         return M_RIGHT;
@@ -246,6 +258,7 @@ CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
             mod |= M_MOD_SHIFT;
         if (flags & kCGEventFlagMaskAlternate)
             mod |= M_MOD_ALT;
+//CGEventSourceButtonState
         XPLMCommandRef cmd = bindings_get(mbutton, mod);
         if (cmd) {
             if (state & M_STATE_DOWN)
@@ -272,6 +285,8 @@ int tap_events() {
     /* CGEventTapCreateForPid has only been added with 10.11 */
     event_tap = CGEventTapCreateForPSN(&psn, kCGHeadInsertEventTap,
         kCGEventTapOptionDefault,
+        CGEventMaskBit(kCGEventLeftMouseDown)  |
+        CGEventMaskBit(kCGEventLeftMouseUp)    |
         CGEventMaskBit(kCGEventRightMouseDown) |
         CGEventMaskBit(kCGEventRightMouseUp)   |
         CGEventMaskBit(kCGEventOtherMouseDown) |

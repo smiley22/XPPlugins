@@ -25,6 +25,7 @@ typedef struct {
 } mbutton_map_t;
 
 static mbutton_map_t mbuttons[] = {
+    { M_LEFT,       "Mouse-Left"            },
     { M_RIGHT,      "Mouse-Right"           },
     { M_MIDDLE,     "Mouse-Middle"          },
     { M_FORWARD,    "Mouse-Forward"         },
