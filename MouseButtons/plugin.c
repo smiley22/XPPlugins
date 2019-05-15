@@ -144,7 +144,7 @@ LRESULT CALLBACK xp_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             mod |= M_MOD_CTRL;
         if (wParam & MK_SHIFT)
             mod |= M_MOD_SHIFT;
-        if (wParam & MK_LBUTTON)
+        if ((wParam & MK_LBUTTON) && (mbutton != M_LEFT))
             mod |= M_MOD_LMB;
         if ((wParam & MK_RBUTTON) && (mbutton != M_RIGHT))
             mod |= M_MOD_RMB;
@@ -258,7 +258,26 @@ CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
             mod |= M_MOD_SHIFT;
         if (flags & kCGEventFlagMaskAlternate)
             mod |= M_MOD_ALT;
-//CGEventSourceButtonState
+        if (CGEventSourceButtonState(0, kCGMouseButtonLeft) &&
+            mbutton != M_LEFT) {
+            mod |= M_MOD_LMB;
+        }
+        if (CGEventSourceButtonState(0, kCGMouseButtonRight) &&
+            mbutton != M_RIGHT) {
+            mod |= M_MOD_RMB;
+        }
+        if (CGEventSourceButtonState(0, kCGMouseButtonCenter) &&
+            mbutton != M_MIDDLE) {
+            mod |= M_MOD_MMB;
+        }
+        if (CGEventSourceButtonState(0, kCGMouseButtonForward) &&
+            mbutton != M_FORWARD) {
+            mod |= M_MOD_FMB;
+        }
+        if (CGEventSourceButtonState(0, kCGMouseButtonBackward) &&
+            mbutton != M_BACKWARD) {
+            mod |= M_MOD_BMB;
+        }
         XPLMCommandRef cmd = bindings_get(mbutton, mod);
         if (cmd) {
             if (state & M_STATE_DOWN)
