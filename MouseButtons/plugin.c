@@ -214,7 +214,9 @@ static mbutton_t ev_to_mbutton(CGEventType type, CGEventRef ev, int *state) {
         return M_RIGHT;
     case kCGEventOtherMouseDown:
     case kCGEventOtherMouseUp:
-        *state = kCGEventOtherMouseDown ? M_STATE_DOWN : M_STATE_UP;
+        *state = type == kCGEventOtherMouseDown ? M_STATE_DOWN :
+            M_STATE_UP;
+        _log("Whats happenining: %i | type = %i", *state, type);
         n = CGEventGetIntegerValueField(ev, kCGMouseEventButtonNumber);
         switch (n) {
         case kCGMouseButtonCenter:
@@ -247,6 +249,7 @@ CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
     CGEventRef ev, void *data) {
     int state;
     mbutton_t mbutton = ev_to_mbutton(type, ev, &state);
+    _log("type = %i, mbutton = %i, DOWN = %i, UP = %i", type, mbutton, (state & M_STATE_DOWN) == M_STATE_DOWN, (state & M_STATE_UP) == M_STATE_UP);
     if (mbutton != M_NONE) {
         int mod = 0;
         /* Figure out state of ALT, CONTROL and SHIFT keys. */
@@ -278,19 +281,22 @@ CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
             mbutton != M_BACKWARD) {
             mod |= M_MOD_BMB;
         }
+        _log("mbutton = %i, mod = %x", mbutton, mod);
         XPLMCommandRef cmd = bindings_get(mbutton, mod);
+        if (!cmd)
+            _log("no command found");
         if (cmd) {
-            if (state & M_STATE_DOWN)
+            if (state & M_STATE_DOWN) {
                 XPLMCommandBegin(cmd);
-            if (state & M_STATE_UP)
+                _log("Command begin issued for mbutton = %i, mod = %x", mbutton, mod);
+            }
+            if (state & M_STATE_UP) {
                 XPLMCommandEnd(cmd);
+                _log("Command end issued for mbutton = %i, mod = %x", mbutton, mod);
+            }
             return NULL;
         }
     }
-    int button = CGEventGetIntegerValueField(ev, kCGMouseEventButtonNumber);
-    int vdelta = CGEventGetIntegerValueField(ev, kCGScrollWheelEventDeltaAxis1);
-    int hdelta = CGEventGetIntegerValueField(ev, kCGScrollWheelEventDeltaAxis2);
-    _log("type = %i | button = %i | vdelta = %i | hdelta = %i", type, button, vdelta, hdelta);
     return ev;
 }
 

@@ -82,8 +82,10 @@ static char *read_token(char *p, char *buf, int size) {
     while (*p == ' ' || *p == '\t')
         p++;
     int i = 0;
-    while (*p && *p != ' ' && *p != '\t' && *p != '\n' && i < (size - 1))
+    while (*p && *p != ' ' && *p != '\t' && *p != '\r' && *p != '\n'
+        && i < (size - 1)) {
         buf[i++] = *p++;
+    }
     buf[i] = '\0';
     return p;
 }
@@ -125,6 +127,8 @@ int bindings_init() {
         p = read_token(p, token, sizeof(token));
         pb->cmd = XPLMFindCommand(token);
         num_bindings++;
+        _log("binding  mbutton = %i | mod = %x | cmd = %s",
+            pb->mbutton, pb->mod, token);
     }
     fclose(fp);
     return num_bindings;

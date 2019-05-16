@@ -89,8 +89,13 @@ void ini_gets(const char *name, char *buf, int size, const char *def) {
             *q = '\0';
         else {
             q = n + strlen(n) - 1;
-            if (*q == '\n')
+            if (*q == '\n') {
                 *q = '\0';
+                q--;
+                /* remove carriage if it's a windows file */
+                if (*q == '\r')
+                    *q = '\0';
+            }
         }
         strcpy(buf, n);
         fclose(fp);
