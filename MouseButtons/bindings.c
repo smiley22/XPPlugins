@@ -127,7 +127,7 @@ int bindings_init() {
         p = read_token(p, token, sizeof(token));
         pb->cmd = XPLMFindCommand(token);
         num_bindings++;
-        _log("binding  mbutton = %i | mod = %x | cmd = %s",
+        _debug("binding  mbutton = %i | mod = %x | cmd = %s",
             pb->mbutton, pb->mod, token);
     }
     fclose(fp);
