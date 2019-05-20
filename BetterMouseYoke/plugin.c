@@ -14,7 +14,7 @@
 #define PLUGIN_DESCRIPTION  "Does away with X-Plane's idiotic centered little box " \
                             "for mouse steering that has caused much grieve and "   \
                             "countless loss of virtual lives."
-#define PLUGIN_VERSION      "1.1"
+#define PLUGIN_VERSION      "1.2"
 
 static XPLMCommandRef toggle_yoke_control;
 static XPLMDataRef yoke_pitch_ratio;
@@ -25,6 +25,10 @@ static int screen_width;
 static int screen_height;
 static int yoke_control_enabled;
 static float magenta[] = { 1.0f, 0, 1.0f };
+static int set_cursor;
+#ifdef IBM
+static HWND xp_hwnd;
+#endif
 
 /**
  * X-Plane 11 Plugin Entry Point.
@@ -61,6 +65,14 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
         _log("init: joystick detected, unloading plugin");
         return 0;
     }
+    set_cursor = ini_geti("set_cursor", 1);
+#ifdef IBM
+    xp_hwnd = FindWindowA("X-System", "X-System");
+    if (!xp_hwnd) {
+        _log("could not find X-Plane 11 window");
+        return 0;
+    }
+#endif
     return 1;
 }
 
@@ -128,6 +140,9 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
            give unrealiable results. Also the screen size may be changed by
            the user at any time. */
         XPLMGetScreenSize(&screen_width, &screen_height);
+        /* Set cursor position to align with current deflection of yoke. */
+        if (set_cursor)
+            set_mouse_cursor();
         yoke_control_enabled = 1;
         XPLMScheduleFlightLoop(loop_id, -1.0f, 0);
     }
@@ -155,4 +170,20 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
     XPLMSetDataf(yoke_pitch_ratio, yoke_pitch);
     /* Call us again next frame. */
     return -1.0f;
+}
+
+void set_mouse_cursor() {
+    int x = 0.5 * screen_width * (XPLMGetDataf(yoke_roll_ratio) + 1);
+    int y = 0.5 * screen_height * (1 - XPLMGetDataf(yoke_pitch_ratio));
+#ifdef IBM
+    POINT pt;
+    GetCursorPos(&pt);
+    /* Convert to coordinates relative to X-Plane window. */
+    ScreenToClient(xp_hwnd, &pt);
+    pt.x = x;
+    /* On windows (0,0) is the upper-left corner. */
+    pt.y = screen_height - y;
+    ClientToScreen(xp_hwnd, &pt);
+    SetCursorPos(pt.x, pt.y);
+#endif
 }
