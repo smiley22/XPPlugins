@@ -94,8 +94,6 @@ PLUGIN_API void XPluginStop(void) {
 PLUGIN_API int XPluginEnable(void) {
     XPLMRegisterCommandHandler(toggle_yoke_control, toggle_yoke_control_cb,
         0, NULL);
-    /* This will hide the clickable yoke control box. */
-    XPLMSetDatai(eq_pfc_yoke, 1);
     XPLMRegisterDrawCallback(draw_cb, xplm_Phase_Window, 0, NULL);
     XPLMCreateFlightLoop_t params = {
         .structSize = sizeof(XPLMCreateFlightLoop_t),
@@ -128,6 +126,16 @@ PLUGIN_API void XPluginDisable(void) {
  * Called when a message is sent to the plugin by X-Plane 11 or another plugin.
  */
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
+    if (from != XPLM_PLUGIN_XPLANE)
+        return;
+    if (msg == XPLM_MSG_PLANE_LOADED) {
+        int index = (int)param;
+        /* user's plane */
+        if (index == XPLM_USER_AIRCRAFT) {
+            /* This will hide the clickable yoke control box. */
+            XPLMSetDatai(eq_pfc_yoke, 1);
+        }
+    }
 }
 
 int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref) {
