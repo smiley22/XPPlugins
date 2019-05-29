@@ -8,6 +8,7 @@ It currently includes
 * [CycleQuickLooks](CycleQuickLooks)<br> Adds two new commands for cycling through a plane's configured quick looks.
 * [PluginLoader](PluginLoader)<br> Enables dynamic loading and unloading of X-Plane 11 plugins under Windows.
 * [A320UE](A320UE)<br> Adds a couple of new commands and other tweaks to the *FF A320 Ultimate* to make it even more enjoyable to fly.
+* [XPMods](XPMods)<br> A PowerShell script for safely installing and/or uninstalling mods that replace or modify existing XP files.
 
 ### Building
 
