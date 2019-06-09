@@ -26,8 +26,10 @@ static int screen_height;
 static int yoke_control_enabled;
 static int rudder_control;
 static float magenta[] = { 1.0f, 0, 1.0f };
+static float green[] = { 0, 1.0f, 0 };
 static int set_pos;
 static int change_cursor;
+static int cursor_pos[2];
 #ifdef IBM
 static HWND xp_hwnd;
 static HCURSOR yoke_cursor;
@@ -171,10 +173,8 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
     if (phase != xplm_CommandBegin)
         return 1;
     if (yoke_control_enabled) {
-#ifdef IBM
         if (change_cursor)
-            true_set_cursor(arrow_cursor);
-#endif
+            set_cursor_bmp(CURSOR_ARROW);
         yoke_control_enabled = 0;
         rudder_control = 0;
     } else {
@@ -185,10 +185,8 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
         /* Set cursor position to align with current deflection of yoke. */
         if (set_pos)
             set_cursor_pos();
-#ifdef IBM
         if (change_cursor)
-            true_set_cursor(yoke_cursor);
-#endif
+            set_cursor_bmp(CURSOR_YOKE);
         yoke_control_enabled = 1;
         XPLMScheduleFlightLoop(loop_id, -1.0f, 0);
     }
@@ -201,18 +199,30 @@ int draw_cb(XPLMDrawingPhase phase, int before, void *ref) {
         XPLMDrawString(magenta, 20, screen_height - 40, rudder_control ?
             "MOUSE RUDDER CONTROL" : "MOUSE YOKE CONTROL",
             NULL, xplmFont_Proportional);
+        if (rudder_control) {
+            /* Draw little bars to indicate maximum rudder deflection. */
+            for (int i = 1; i < 3; i++) {
+                XPLMDrawString(green, cursor_pos[0] - 100,
+                    cursor_pos[1] + 4 - 7 * i, "|", NULL, xplmFont_Basic);
+                XPLMDrawString(green, cursor_pos[0] + 100,
+                    cursor_pos[1] + 4 - 7 * i, "|", NULL, xplmFont_Basic);
+            }
+        }
     }
     return 1;
 }
 
 float loop_cb(float last_call, float last_loop, int count, void *ref) {
     /* If user has disabled mouse yoke control, suspend loop. */
-    if (yoke_control_enabled == 0)
+    if (yoke_control_enabled == 0) {
+        /* if rudder is still deflected, interpolate it back to neutral */
         return 0;
+    }
     int m_x, m_y;
     XPLMGetMouseLocationGlobal(&m_x, &m_y);
     if (controlling_rudder()) {
         /* TODO */
+        /* (m_x - cursor_pos[0]) */
     } else {
         float yoke_roll = 2 * (m_x / (float)screen_width) - 1;
         float yoke_pitch = 1 - 2 * (m_y / (float)screen_height);
@@ -236,19 +246,19 @@ int controlling_rudder() {
     if (left_mouse_down()) {
         /* Transitioning into rudder control */
         if (!rudder_control) {
-#ifdef IBM
             if (change_cursor)
-                true_set_cursor(rudder_cursor);
-#endif
+                set_cursor_bmp(CURSOR_RUDDER);
+            /* Remember current cursor position */
+            XPLMGetMouseLocationGlobal(cursor_pos, cursor_pos + 1);
             rudder_control = 1;
         }
     } else {
         /* Transitioning out of rudder control. */
         if (rudder_control) {
-#ifdef IBM
             if (change_cursor)
-                true_set_cursor(yoke_cursor);
-#endif
+                set_cursor_bmp(CURSOR_YOKE);
+            /* Restore cursor position */
+
             rudder_control = 0;
         }
     }
@@ -268,6 +278,23 @@ void set_cursor_pos() {
     pt.y = screen_height - y;
     ClientToScreen(xp_hwnd, &pt);
     SetCursorPos(pt.x, pt.y);
+#elif APL
+    /* TODO */
+#endif
+}
+
+void set_cursor_bmp(cursor_t cursor) {
+#ifdef IBM
+    HCURSOR c = arrow_cursor;
+    switch (cursor) {
+    case CURSOR_YOKE:
+        c = yoke_cursor;
+        break;
+    case CURSOR_RUDDER:
+        c = rudder_cursor;
+        break;
+    }
+    true_set_cursor(c);
 #elif APL
     /* TODO */
 #endif
