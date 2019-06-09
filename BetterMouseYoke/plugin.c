@@ -16,9 +16,12 @@
                             "countless loss of virtual lives."
 #define PLUGIN_VERSION      "1.4"
 
+#define RUDDER_DEFL_DIST 100
+
 static XPLMCommandRef toggle_yoke_control;
 static XPLMDataRef yoke_pitch_ratio;
 static XPLMDataRef yoke_roll_ratio;
+static XPLMDataRef yoke_heading_ratio;
 static XPLMDataRef eq_pfc_yoke;
 static XPLMFlightLoopID loop_id;
 static int screen_width;
@@ -30,6 +33,8 @@ static float green[] = { 0, 1.0f, 0 };
 static int set_pos;
 static int change_cursor;
 static int cursor_pos[2];
+static int rudder_defl_dist;
+static float yaw_ratio;
 #ifdef IBM
 static HWND xp_hwnd;
 static HCURSOR yoke_cursor;
@@ -62,6 +67,12 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
         _log("init fail: could not find yoke_roll_ratio dataref");
         return 0;
     }
+    yoke_heading_ratio = XPLMFindDataRef(
+        "sim/cockpit2/controls/yoke_heading_ratio");
+    if (yoke_heading_ratio == NULL) {
+        _log("init fail: could not find yoke_heading_ratio dataref");
+        return 0;
+    }
     eq_pfc_yoke = XPLMFindDataRef("sim/joystick/eq_pfc_yoke");
     if (eq_pfc_yoke == NULL) {
         _log("init fail: could not find eq_pfc_yoke dataref");
@@ -74,6 +85,7 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
     }
     set_pos = ini_geti("set_pos", 1);
     change_cursor = ini_geti("change_cursor", 1);
+    rudder_defl_dist = ini_geti("rudder_deflection_distance", RUDDER_DEFL_DIST);
 #ifdef IBM
     xp_hwnd = FindWindowA("X-System", "X-System");
     if (!xp_hwnd) {
@@ -184,7 +196,7 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
         XPLMGetScreenSize(&screen_width, &screen_height);
         /* Set cursor position to align with current deflection of yoke. */
         if (set_pos)
-            set_cursor_pos();
+            set_cursor_from_yoke();
         if (change_cursor)
             set_cursor_bmp(CURSOR_YOKE);
         yoke_control_enabled = 1;
@@ -202,9 +214,9 @@ int draw_cb(XPLMDrawingPhase phase, int before, void *ref) {
         if (rudder_control) {
             /* Draw little bars to indicate maximum rudder deflection. */
             for (int i = 1; i < 3; i++) {
-                XPLMDrawString(green, cursor_pos[0] - 100,
+                XPLMDrawString(green, cursor_pos[0] - rudder_defl_dist,
                     cursor_pos[1] + 4 - 7 * i, "|", NULL, xplmFont_Basic);
-                XPLMDrawString(green, cursor_pos[0] + 100,
+                XPLMDrawString(green, cursor_pos[0] + rudder_defl_dist,
                     cursor_pos[1] + 4 - 7 * i, "|", NULL, xplmFont_Basic);
             }
         }
@@ -216,13 +228,19 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
     /* If user has disabled mouse yoke control, suspend loop. */
     if (yoke_control_enabled == 0) {
         /* if rudder is still deflected, interpolate it back to neutral */
+        if (yaw_ratio > 0) {
+            /* 500ms to go from 1 to 0 */
+        }
         return 0;
     }
     int m_x, m_y;
     XPLMGetMouseLocationGlobal(&m_x, &m_y);
-    if (controlling_rudder()) {
-        /* TODO */
-        /* (m_x - cursor_pos[0]) */
+    if (controlling_rudder(&m_x, &m_y)) {
+        int dist = min(max(m_x - cursor_pos[0], -rudder_defl_dist),
+            rudder_defl_dist);
+        /* Save value so we don't have to continuously query the dr above. */
+        yaw_ratio = dist / (float)rudder_defl_dist;
+        XPLMSetDataf(yoke_heading_ratio, yaw_ratio);
     } else {
         float yoke_roll = 2 * (m_x / (float)screen_width) - 1;
         float yoke_pitch = 1 - 2 * (m_y / (float)screen_height);
@@ -242,7 +260,7 @@ int left_mouse_down() {
 #endif
 }
 
-int controlling_rudder() {
+int controlling_rudder(int *x, int *y) {
     if (left_mouse_down()) {
         /* Transitioning into rudder control */
         if (!rudder_control) {
@@ -257,25 +275,30 @@ int controlling_rudder() {
         if (rudder_control) {
             if (change_cursor)
                 set_cursor_bmp(CURSOR_YOKE);
-            /* Restore cursor position */
-
+            /* Restore previous cursor position */
+            set_cursor_pos(cursor_pos[0], cursor_pos[1]);
+            *x = cursor_pos[0];
+            *y = cursor_pos[1];
             rudder_control = 0;
         }
     }
     return rudder_control;
 }
 
-void set_cursor_pos() {
-    int x = 0.5 * screen_width * (XPLMGetDataf(yoke_roll_ratio) + 1);
-    int y = 0.5 * screen_height * (1 - XPLMGetDataf(yoke_pitch_ratio));
+void set_cursor_from_yoke() {
+    set_cursor_pos(
+        0.5 * screen_width  * (XPLMGetDataf(yoke_roll_ratio) + 1),
+        0.5 * screen_height * (1 - XPLMGetDataf(yoke_pitch_ratio))
+    );
+}
+
+void set_cursor_pos(int x, int y) {
 #ifdef IBM
-    POINT pt;
-    GetCursorPos(&pt);
-    /* Convert to coordinates relative to X-Plane window. */
-    ScreenToClient(xp_hwnd, &pt);
-    pt.x = x;
-    /* On windows (0,0) is the upper-left corner. */
-    pt.y = screen_height - y;
+    POINT pt = {
+        .x = x,
+        /* On windows (0,0) is the upper-left corner. */
+        .y = screen_height - y
+    };
     ClientToScreen(xp_hwnd, &pt);
     SetCursorPos(pt.x, pt.y);
 #elif APL
