@@ -24,6 +24,7 @@ static XPLMFlightLoopID loop_id;
 static int screen_width;
 static int screen_height;
 static int yoke_control_enabled;
+static int rudder_control;
 static float magenta[] = { 1.0f, 0, 1.0f };
 static int set_pos;
 static int change_cursor;
@@ -175,6 +176,7 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
             true_set_cursor(arrow_cursor);
 #endif
         yoke_control_enabled = 0;
+        rudder_control = 0;
     } else {
         /* Fetch screen dimensions here because doing it from XPluginEnable
            give unrealiable results. Also the screen size may be changed by
@@ -196,7 +198,8 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
 int draw_cb(XPLMDrawingPhase phase, int before, void *ref) {
     /* Show a little text indication in top left corner of screen. */
     if (yoke_control_enabled) {
-        XPLMDrawString(magenta, 20, screen_height - 40, "MOUSE YOKE CONTROL",
+        XPLMDrawString(magenta, 20, screen_height - 40, rudder_control ?
+            "MOUSE RUDDER CONTROL" : "MOUSE YOKE CONTROL",
             NULL, xplmFont_Proportional);
     }
     return 1;
@@ -208,12 +211,48 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
         return 0;
     int m_x, m_y;
     XPLMGetMouseLocationGlobal(&m_x, &m_y);
-    float yoke_roll = 2 * (m_x / (float)screen_width) - 1;
-    float yoke_pitch = 1 - 2 * (m_y / (float)screen_height);
-    XPLMSetDataf(yoke_roll_ratio, yoke_roll);
-    XPLMSetDataf(yoke_pitch_ratio, yoke_pitch);
+    if (controlling_rudder()) {
+        /* TODO */
+    } else {
+        float yoke_roll = 2 * (m_x / (float)screen_width) - 1;
+        float yoke_pitch = 1 - 2 * (m_y / (float)screen_height);
+        XPLMSetDataf(yoke_roll_ratio, yoke_roll);
+        XPLMSetDataf(yoke_pitch_ratio, yoke_pitch);
+    }
     /* Call us again next frame. */
     return -1.0f;
+}
+
+int left_mouse_down() {
+#ifdef IBM
+    /* Most significant bit is set if button is being held. */
+    return GetAsyncKeyState(VK_LBUTTON) >> 15;
+#elif APL
+    /* TODO */
+#endif
+}
+
+int controlling_rudder() {
+    if (left_mouse_down()) {
+        /* Transitioning into rudder control */
+        if (!rudder_control) {
+#ifdef IBM
+            if (change_cursor)
+                true_set_cursor(rudder_cursor);
+#endif
+            rudder_control = 1;
+        }
+    } else {
+        /* Transitioning out of rudder control. */
+        if (rudder_control) {
+#ifdef IBM
+            if (change_cursor)
+                true_set_cursor(yoke_cursor);
+#endif
+            rudder_control = 0;
+        }
+    }
+    return rudder_control;
 }
 
 void set_cursor_pos() {
@@ -230,7 +269,7 @@ void set_cursor_pos() {
     ClientToScreen(xp_hwnd, &pt);
     SetCursorPos(pt.x, pt.y);
 #elif APL
-    /* todo */
+    /* TODO */
 #endif
 }
 
