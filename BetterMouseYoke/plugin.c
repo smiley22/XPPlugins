@@ -14,7 +14,7 @@
 #define PLUGIN_DESCRIPTION  "Does away with X-Plane's idiotic centered little box " \
                             "for mouse steering that has caused much grieve and "   \
                             "countless loss of virtual lives."
-#define PLUGIN_VERSION      "1.2"
+#define PLUGIN_VERSION      "1.4"
 
 static XPLMCommandRef toggle_yoke_control;
 static XPLMDataRef yoke_pitch_ratio;
@@ -25,9 +25,14 @@ static int screen_width;
 static int screen_height;
 static int yoke_control_enabled;
 static float magenta[] = { 1.0f, 0, 1.0f };
-static int set_cursor;
+static int set_pos;
+static int change_cursor;
 #ifdef IBM
 static HWND xp_hwnd;
+static HCURSOR yoke_cursor;
+static HCURSOR rudder_cursor;
+static HCURSOR arrow_cursor;
+static HCURSOR(WINAPI *true_set_cursor) (HCURSOR cursor) = SetCursor;
 #endif
 
 /**
@@ -42,7 +47,6 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
     sprintf(name, "%s (v%s)", PLUGIN_NAME, PLUGIN_VERSION);
     strcpy(sig, PLUGIN_SIG);
     strcpy(desc, PLUGIN_DESCRIPTION);
-
     toggle_yoke_control = XPLMCreateCommand("BetterMouseYoke/ToggleYokeControl",
         "Toggle mouse yoke control");
     yoke_pitch_ratio = XPLMFindDataRef("sim/cockpit2/controls/yoke_pitch_ratio");
@@ -65,11 +69,31 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
         _log("init: joystick detected, unloading plugin");
         return 0;
     }
-    set_cursor = ini_geti("set_cursor", 1);
+    set_pos = ini_geti("set_pos", 1);
+    change_cursor = ini_geti("change_cursor", 1);
 #ifdef IBM
     xp_hwnd = FindWindowA("X-System", "X-System");
     if (!xp_hwnd) {
         _log("could not find X-Plane 11 window");
+        return 0;
+    }
+    if (!hook_set_cursor(1)) {
+        _log("could not hook SetCursor function");
+        return 0;
+    }
+    yoke_cursor = LoadCursor(NULL, IDC_SIZEALL);
+    if (!yoke_cursor) {
+        _log("could not load yoke_cursor");
+        return 0;
+    }
+    rudder_cursor = LoadCursor(NULL, IDC_SIZEWE);
+    if (!rudder_cursor) {
+        _log("could not load rudder_cursor");
+        return 0;
+    }
+    arrow_cursor = LoadCursor(NULL, IDC_ARROW);
+    if (!arrow_cursor) {
+        _log("could not load arrow_cursor");
         return 0;
     }
 #endif
@@ -82,7 +106,11 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
  * Called when the plugin is about to be unloaded from X-Plane 11.
  */
 PLUGIN_API void XPluginStop(void) {
-    /* nothing to do here */
+#ifdef IBM
+    if (!hook_set_cursor(0)) {
+        _log("could not unhook SetCursor function");
+    }
+#endif
 }
 
 /**
@@ -142,6 +170,10 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
     if (phase != xplm_CommandBegin)
         return 1;
     if (yoke_control_enabled) {
+#ifdef IBM
+        if (change_cursor)
+            true_set_cursor(arrow_cursor);
+#endif
         yoke_control_enabled = 0;
     } else {
         /* Fetch screen dimensions here because doing it from XPluginEnable
@@ -149,8 +181,12 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
            the user at any time. */
         XPLMGetScreenSize(&screen_width, &screen_height);
         /* Set cursor position to align with current deflection of yoke. */
-        if (set_cursor)
-            set_mouse_cursor();
+        if (set_pos)
+            set_cursor_pos();
+#ifdef IBM
+        if (change_cursor)
+            true_set_cursor(yoke_cursor);
+#endif
         yoke_control_enabled = 1;
         XPLMScheduleFlightLoop(loop_id, -1.0f, 0);
     }
@@ -180,7 +216,7 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
     return -1.0f;
 }
 
-void set_mouse_cursor() {
+void set_cursor_pos() {
     int x = 0.5 * screen_width * (XPLMGetDataf(yoke_roll_ratio) + 1);
     int y = 0.5 * screen_height * (1 - XPLMGetDataf(yoke_pitch_ratio));
 #ifdef IBM
@@ -193,5 +229,43 @@ void set_mouse_cursor() {
     pt.y = screen_height - y;
     ClientToScreen(xp_hwnd, &pt);
     SetCursorPos(pt.x, pt.y);
+#elif APL
+    /* todo */
 #endif
 }
+
+#ifdef IBM
+HCURSOR WINAPI set_cursor(HCURSOR cursor) {
+    if (!yoke_control_enabled)
+        return true_set_cursor(cursor);
+    return cursor;
+}
+
+int hook_set_cursor(int attach) {
+    long err;
+    if ((err = DetourTransactionBegin())) {
+        _log("DetourTransactionBegin error (%i)", err);
+        return 0;
+    }
+    if ((err = DetourUpdateThread(GetCurrentThread()))) {
+        _log("DetourUpdateThread error (%i)", err);
+        return 0;
+    }
+    if (attach) {
+        if ((err = DetourAttach((void**)&true_set_cursor, set_cursor))) {
+            _log("DetourAttach error (%i)", err);
+            return 0;
+        }
+    } else {
+        if ((err = DetourDetach((void**)&true_set_cursor, set_cursor))) {
+            _log("DetourDetach error (%i)", err);
+            return 0;
+        }
+    }
+    if ((err = DetourTransactionCommit())) {
+        _log("DetourTransactionCommit error (%i)", err);
+        return 0;
+    }
+    return 1;
+}
+#endif

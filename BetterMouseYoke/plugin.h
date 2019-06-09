@@ -17,9 +17,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#ifdef IBM
+#pragma comment(lib, "detours.lib")
+#include "detours.h"
+int hook_set_cursor(int attach);
+#endif
 
 int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref);
 int draw_cb(XPLMDrawingPhase phase, int before, void *ref);
 float loop_cb(float last_call, float last_loop, int count, void *ref);
-void set_mouse_cursor();
+void set_cursor_pos();
 #endif /* _PLUGIN_H_ */

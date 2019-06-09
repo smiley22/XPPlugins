@@ -1,7 +1,7 @@
 Synopsis
 ========
 
-This script allows you to easily install and/or uninstall mods that replace or modify existing files.
+This script allows you to easily install and/or uninstall mods that replace or modify existing files. Place it in a new directory *mods* inside your X-Plane 11 installation, i.e. *\X-Plane 11\mods\XPMods.ps1*. Put any mods that you want to manage in the same directory.
 
 ![](image.png?raw=true)
 
@@ -13,7 +13,7 @@ The script uses file-system links to install mods so that no files need to be co
 Using `XPMods`
 --------------------
 
-Invoking `XPMods` without any command-line arguments will displays an interactive prompt from which you can then enable and/or disable mods.
+Invoking `XPMods` without any command-line arguments will display an interactive prompt from which you can then enable and/or disable mods.
 
     PS> ./XPMods.ps1
 
