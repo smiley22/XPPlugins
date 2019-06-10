@@ -263,7 +263,7 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
         if (yaw_ratio != 0) {
             long long now = get_time_ms();
             float dt = (now - _last_time) / 1000.0f;
-            _last_time = now;            
+            _last_time = now;
             yaw_ratio = yaw_ratio > 0 ? max(0, yaw_ratio - dt * rudder_ret_spd) :
                 min(0, yaw_ratio + dt * rudder_ret_spd);
             XPLMSetDataf(yoke_heading_ratio, yaw_ratio);
@@ -278,7 +278,10 @@ int left_mouse_down() {
     /* Most significant bit is set if button is being held. */
     return GetAsyncKeyState(VK_LBUTTON) >> 15;
 #elif APL
-    /* TODO */
+    /* FIXME: Not sure if we can always call this or if it's only valid in
+        the context of an event? */
+    return CGEventSourceButtonState(
+        kCGEventSourceStateCombinedSessionState, kCGMouseButtonLeft);
 #endif
 }
 
@@ -324,9 +327,21 @@ void set_cursor_pos(int x, int y) {
     ClientToScreen(xp_hwnd, &pt);
     SetCursorPos(pt.x, pt.y);
 #elif APL
-    /* TODO */
-    /* Can probably use NSCursor::set for this but not sure we can hook
-       that under OSX to prevent XP from overriding our cursor again...*/
+    /* FIXME: need to test if this actually works */
+    CGPoint pt = {
+        .x = x,
+        .y = screen_height - y
+    };
+    CGWarpMouseCursorPosition(pt);
+    /*
+        CGWarpMouseCursorPosition(CGPoint p)
+            Moves the mouse cursor to a specified point relative to the
+            display origin (the upper-left corner of the display).
+            
+        CGDisplayMoveCursorToPoint(CGDirectDisplayID id, CGPoint p)
+         - CGMainDisplayID()
+         - kCGDirectMainDisplay
+   */
 #endif
 }
 
@@ -344,6 +359,8 @@ void set_cursor_bmp(cursor_t cursor) {
     true_set_cursor(c);
 #elif APL
     /* TODO */
+    /* Can probably use NSCursor::set for this but not sure we can hook
+       that under OSX to prevent XP from constantly overriding our cursor...*/
 #endif
 }
 
