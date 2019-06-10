@@ -2,7 +2,7 @@ NAME    = mac.xpl
 SRC     = $(wildcard *.c)
 CC      = clang
 CFLAGS  = -Wall -DAPL -O2
-LDFLAGS = ../XP/Libs/XPLM ../Util/util.a -dynamiclib -fvisibility=hidden
+LDFLAGS = ../XP/Libs/XPLM ../Util/util.a -dynamiclib -fvisibility=hidden -framework ApplicationServices
 
 all: $(NAME)
 
