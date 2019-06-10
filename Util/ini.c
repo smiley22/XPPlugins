@@ -31,7 +31,7 @@ int ini_geti(const char *name, int def) {
 #else
     char buf[32];
     ini_gets(name, buf, 32, "nan");
-    if (!strcmp(name, "nan"))
+    if (!strcmp(buf, "nan"))
         return def;
     return atoi(buf);
 #endif
@@ -47,10 +47,9 @@ int ini_seti(const char *name, int val) {
 }
 
 float ini_getf(const char *name, float def) {
-    char *f = ini_get_path();
     char buf[32];
     ini_gets(name, buf, 32, "nan");
-    if (!strcmp(name, "nan"))
+    if (!strcmp(buf, "nan"))
         return def;
     return atof(buf);
 }

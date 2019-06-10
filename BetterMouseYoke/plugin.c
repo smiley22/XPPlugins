@@ -16,7 +16,8 @@
                             "countless loss of virtual lives."
 #define PLUGIN_VERSION      "1.4"
 
-#define RUDDER_DEFL_DIST 100
+#define RUDDER_DEFL_DIST    100
+#define RUDDER_RET_SPEED    2.0f
 
 static XPLMCommandRef toggle_yoke_control;
 static XPLMDataRef yoke_pitch_ratio;
@@ -35,6 +36,7 @@ static int change_cursor;
 static int cursor_pos[2];
 static int rudder_defl_dist;
 static float yaw_ratio;
+static float rudder_ret_spd;
 #ifdef IBM
 static HWND xp_hwnd;
 static HCURSOR yoke_cursor;
@@ -86,6 +88,7 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
     set_pos = ini_geti("set_pos", 1);
     change_cursor = ini_geti("change_cursor", 1);
     rudder_defl_dist = ini_geti("rudder_deflection_distance", RUDDER_DEFL_DIST);
+    rudder_ret_spd = ini_getf("rudder_return_speed", RUDDER_RET_SPEED);
 #ifdef IBM
     xp_hwnd = FindWindowA("X-System", "X-System");
     if (!xp_hwnd) {
@@ -225,12 +228,21 @@ int draw_cb(XPLMDrawingPhase phase, int before, void *ref) {
 }
 
 float loop_cb(float last_call, float last_loop, int count, void *ref) {
+    static long long _last_time;
     /* If user has disabled mouse yoke control, suspend loop. */
     if (yoke_control_enabled == 0) {
-        /* if rudder is still deflected, interpolate it back to neutral */
-        if (yaw_ratio > 0) {
-            /* 500ms to go from 1 to 0 */
+        /* If rudder is still deflected, move it gradually back to zero. */
+        if (yaw_ratio != 0) {
+            long long now = get_time_ms();
+            float dt = (now - _last_time) / 1000.0f;
+            _last_time = now;
+            yaw_ratio = yaw_ratio > 0 ? max(0, yaw_ratio - dt * rudder_ret_spd) :
+                min(0, yaw_ratio + dt * rudder_ret_spd);
+            XPLMSetDataf(yoke_heading_ratio, yaw_ratio);
+            /* Call us again next frame until zero. */
+            return yaw_ratio ? -1.0f : 0;
         }
+        /* Don't call us anymore. */
         return 0;
     }
     int m_x, m_y;
@@ -238,6 +250,7 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
     if (controlling_rudder(&m_x, &m_y)) {
         int dist = min(max(m_x - cursor_pos[0], -rudder_defl_dist),
             rudder_defl_dist);
+        _last_time = get_time_ms();
         /* Save value so we don't have to continuously query the dr above. */
         yaw_ratio = dist / (float)rudder_defl_dist;
         XPLMSetDataf(yoke_heading_ratio, yaw_ratio);
@@ -246,6 +259,15 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
         float yoke_pitch = 1 - 2 * (m_y / (float)screen_height);
         XPLMSetDataf(yoke_roll_ratio, yoke_roll);
         XPLMSetDataf(yoke_pitch_ratio, yoke_pitch);
+        /* If rudder is still deflected, move it gradually back to zero. */
+        if (yaw_ratio != 0) {
+            long long now = get_time_ms();
+            float dt = (now - _last_time) / 1000.0f;
+            _last_time = now;            
+            yaw_ratio = yaw_ratio > 0 ? max(0, yaw_ratio - dt * rudder_ret_spd) :
+                min(0, yaw_ratio + dt * rudder_ret_spd);
+            XPLMSetDataf(yoke_heading_ratio, yaw_ratio);
+        }
     }
     /* Call us again next frame. */
     return -1.0f;
@@ -303,6 +325,8 @@ void set_cursor_pos(int x, int y) {
     SetCursorPos(pt.x, pt.y);
 #elif APL
     /* TODO */
+    /* Can probably use NSCursor::set for this but not sure we can hook
+       that under OSX to prevent XP from overriding our cursor again...*/
 #endif
 }
 
