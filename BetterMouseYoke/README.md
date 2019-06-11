@@ -23,7 +23,7 @@ Additionally, a magenta text indicator is displayed in the upper-left corner of 
   </a>
 </p>
 
-While in mouse yoke mode, press and hold the left mouse button to switch to rudder mode. The cursor will change to a <img src="rudder-mode.png?raw=true"> symbol and the magenta text indicator will read *Mouse Rudder Control*. Two green little bars will appear to the left and to the right of the cursor that indicate the mouse movement range for full rudder deflection.
+While in mouse yoke mode, press and hold the left mouse button to switch to rudder mode. The cursor will change to a <img src="rudder-mode.png?raw=true"> symbol and the magenta text indicator will read *Mouse Rudder Control*. Two green little bars will appear to the left and to the right of the cursor that indicate the mouse movement range for rudder deflection.
 
 <p align="center">
   <a href="image-2.png?raw=true" target="_blank">
@@ -63,11 +63,11 @@ set_pos = 1
 # this to 0 to disable.
 change_cursor = 1
 # Defines the mouse movement range for rudder deflection in rudder mode.
-# In other words, the distance between the two green vertical bars on the
-# screen.
+# In other words, the greater the value, the greater the distance between
+# the two green vertical bars on the screen.
 rudder_deflection_distance = 100
 # The speed (in units per second) with which the rudder returns to the
-# neutral position when exiting rudder mode.
+# neutral position after exiting rudder mode.
 # The default value of 2.0 means that it takes the rudder half a second
 # to return to neutral from full left or right deflection.
 rudder_return_speed = 2.0

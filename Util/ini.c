@@ -64,8 +64,10 @@ void ini_gets(const char *name, char *buf, int size, const char *def) {
     GetPrivateProfileStringA(INI_SECT_NAME, name, def, buf, size, f);
 #else
     FILE *fp = fopen(f, "r");
-    if (!fp)
-        return 0;
+    if (!fp) {
+        strcpy(buf, def);
+        return;
+    }
     char line[128];
     while (fgets(line, sizeof(line), fp)) {
         char *p = line;

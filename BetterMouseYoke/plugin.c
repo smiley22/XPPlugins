@@ -246,7 +246,7 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
         return 0;
     }
     int m_x, m_y;
-    XPLMGetMouseLocationGlobal(&m_x, &m_y);
+    get_cursor_pos(&m_x, &m_y);
     if (controlling_rudder(&m_x, &m_y)) {
         int dist = min(max(m_x - cursor_pos[0], -rudder_defl_dist),
             rudder_defl_dist);
@@ -278,8 +278,7 @@ int left_mouse_down() {
     /* Most significant bit is set if button is being held. */
     return GetAsyncKeyState(VK_LBUTTON) >> 15;
 #elif APL
-    /* FIXME: Not sure if we can always call this or if it's only valid in
-        the context of an event? */
+    /* Apparently you can use this also outside of the context of an event. */
     return CGEventSourceButtonState(
         kCGEventSourceStateCombinedSessionState, kCGMouseButtonLeft);
 #endif
@@ -310,6 +309,21 @@ int controlling_rudder(int *x, int *y) {
     return rudder_control;
 }
 
+void get_cursor_pos(int *x, int *y) {
+#ifdef APL
+    /* On OSX, XPLMGetMouseLocationGlobal still returns old cursor location after
+        setting its position for whatever reason, so we query the cursor position
+        ourselves. */
+    CGEventRef ev = CGEventCreate(NULL);
+    CGPoint pt = CGEventGetLocation(ev);
+    CFRelease(ev);
+    *x = pt.x;
+    *y = screen_height - pt.y;
+#else
+    XPLMGetMouseLocationGlobal(x, y);
+#endif
+}
+
 void set_cursor_from_yoke() {
     set_cursor_pos(
         0.5 * screen_width  * (XPLMGetDataf(yoke_roll_ratio) + 1),
@@ -327,21 +341,15 @@ void set_cursor_pos(int x, int y) {
     ClientToScreen(xp_hwnd, &pt);
     SetCursorPos(pt.x, pt.y);
 #elif APL
-    /* FIXME: need to test if this actually works */
     CGPoint pt = {
         .x = x,
         .y = screen_height - y
     };
-    CGWarpMouseCursorPosition(pt);
-    /*
-        CGWarpMouseCursorPosition(CGPoint p)
-            Moves the mouse cursor to a specified point relative to the
-            display origin (the upper-left corner of the display).
-            
-        CGDisplayMoveCursorToPoint(CGDirectDisplayID id, CGPoint p)
-         - CGMainDisplayID()
-         - kCGDirectMainDisplay
-   */
+    /* CGWarpMouseCursorPosition and CGDisplayMoveCursorToPoint don't generate a mouse
+        movement event so they're not a good fit here. */
+    CGEventRef ev = CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, pt, 0);
+    CGEventPost(kCGHIDEventTap, ev);
+    CFRelease(ev);
 #endif
 }
 

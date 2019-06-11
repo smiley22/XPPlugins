@@ -32,6 +32,7 @@ typedef enum {
 int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref);
 int draw_cb(XPLMDrawingPhase phase, int before, void *ref);
 float loop_cb(float last_call, float last_loop, int count, void *ref);
+void get_cursor_pos(int *x, int *y);
 void set_cursor_from_yoke();
 void set_cursor_pos(int x, int y);
 void set_cursor_bmp(cursor_t cursor);
