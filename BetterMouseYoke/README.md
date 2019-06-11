@@ -39,8 +39,37 @@ You can get the latest version [here](https://github.com/smiley22/XPPlugins/rele
 ### Installation
 Simply extract the .zip archive into the *plugins* directory of your *X Plane 11* installation, e.g. *X Plane 11\Resources\plugins*.
 
+### Configuration
+Once installed, you will find a new command for toggling mouse yoke control on or off in the Keyboard settings.
+
 <p align="center">
   <a href="image-3.png?raw=true" target="_blank">
     <img title="Keyboard command" src="image-3.png?raw=true" width="860" height="503"/>
   </a>
 </p>
+
+##### Config File
+On startup, the plugin looks for a *settings.ini* file in its' directory, i.e. *"X Plane 11\Resources\plugins\BetterMouseYoke\settings.ini"*. This file allows you to change some of the settings of the plugin. If the file does not exist, the plugin uses default values.
+
+Here's an example *settings.ini* file with all the options the plugin allows you to configure. Lines starting with a **#** are comments.
+
+```
+[settings]
+# When entering mouse yoke mode, set the mouse cursor to align with
+# the current yoke deflection to avoid rapid movements.
+# Set to 0 to disable.
+set_pos = 1
+# Change the mouse cursor symbol when in yoke or rudder mode. Set
+# this to 0 to disable.
+change_cursor = 1
+# Defines the mouse movement range for rudder deflection in rudder mode.
+# In other words, the distance between the two green vertical bars on the
+# screen.
+rudder_deflection_distance = 100
+# The speed (in units per second) with which the rudder returns to the
+# neutral position when exiting rudder mode.
+# The default value of 2.0 means that it takes the rudder half a second
+# to return to neutral from full left or right deflection.
+rudder_return_speed = 2.0
+```
+
