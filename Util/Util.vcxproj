@@ -23,6 +23,7 @@
     <ClCompile Include="dllmain.c" />
     <ClCompile Include="ini.c" />
     <ClCompile Include="log.c" />
+    <ClCompile Include="menu.c" />
     <ClCompile Include="path.c" />
     <ClCompile Include="snd.c" />
     <ClCompile Include="time.c" />

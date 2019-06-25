@@ -26,6 +26,7 @@
 #include "../XP/XPLMDataAccess.h"
 #include "../XP/XPLMPlugin.h"
 #include "../XP/XPLMPlanes.h"
+#include "../XP/XPLMMenus.h"
 #include "../FMOD/fmod.h"
 #include <stdio.h>
 #include <stdbool.h>
@@ -94,5 +95,16 @@ void cmd_free(XPLMCommandRef *cmd, XPLMCommandCallback_f cb, void *data);
 
 /* time */
 long long get_time_ms();
+
+/* menu */
+#define MAX_MENU_ITEMS 16
+typedef struct {
+    const char *name;
+    const char *ini_name;
+    int *var;
+    int value;
+} menu_item_t;
+int menu_init(const char *name, menu_item_t *items, int num);
+int menu_deinit();
 
 #endif /* _UTIL_H_ */

@@ -14,9 +14,9 @@
 #define PLUGIN_DESCRIPTION  "Does away with X-Plane's idiotic centered little box " \
                             "for mouse steering that has caused much grieve and "   \
                             "countless loss of virtual lives."
-#define PLUGIN_VERSION      "1.4"
+#define PLUGIN_VERSION      "1.5"
 
-#define RUDDER_DEFL_DIST    100
+#define RUDDER_DEFL_DIST    200
 #define RUDDER_RET_SPEED    2.0f
 
 static XPLMCommandRef toggle_yoke_control;
@@ -34,6 +34,8 @@ static float green[] = { 0, 1.0f, 0 };
 static int set_pos;
 static int change_cursor;
 static int cursor_pos[2];
+static int set_rudder_pos;
+static int rudder_return;
 static int rudder_defl_dist;
 static float yaw_ratio;
 static float rudder_ret_spd;
@@ -85,8 +87,10 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
         _log("init: joystick detected, unloading plugin");
         return 0;
     }
-    set_pos = ini_geti("set_pos", 1);
-    change_cursor = ini_geti("change_cursor", 1);
+    if (!init_menu()) {
+        _log("init: could not init menu");
+        return 0;
+    }
     rudder_defl_dist = ini_geti("rudder_deflection_distance", RUDDER_DEFL_DIST);
     rudder_ret_spd = ini_getf("rudder_return_speed", RUDDER_RET_SPEED);
 #ifdef IBM
@@ -164,6 +168,7 @@ PLUGIN_API void XPluginDisable(void) {
     if (loop_id)
         XPLMDestroyFlightLoop(loop_id);
     loop_id = NULL;
+    menu_deinit();
 }
 
 /**
@@ -182,6 +187,18 @@ PLUGIN_API void XPluginReceiveMessage(XPLMPluginID from, int msg, void *param) {
             XPLMSetDatai(eq_pfc_yoke, 1);
         }
     }
+}
+
+int init_menu() {
+    menu_item_t items[] = {
+        { "Set Yoke Cursor", "set_pos", &set_pos, 1 },
+        { "Set Rudder Cursor", "set_rudder_pos", &set_rudder_pos, 1 },
+        { "Change Cursor Icon", "change_cursor", &change_cursor, 1 },
+        { "Return Rudder", "rudder_return", &rudder_return, 1 }
+    };
+    int num = sizeof(items) / sizeof(items[0]);
+
+    return menu_init(PLUGIN_NAME, items, num);
 }
 
 int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref) {
@@ -232,7 +249,7 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
     /* If user has disabled mouse yoke control, suspend loop. */
     if (yoke_control_enabled == 0) {
         /* If rudder is still deflected, move it gradually back to zero. */
-        if (yaw_ratio != 0) {
+        if (yaw_ratio != 0 && rudder_return) {
             long long now = get_time_ms();
             float dt = (now - _last_time) / 1000.0f;
             _last_time = now;
@@ -260,7 +277,7 @@ float loop_cb(float last_call, float last_loop, int count, void *ref) {
         XPLMSetDataf(yoke_roll_ratio, yoke_roll);
         XPLMSetDataf(yoke_pitch_ratio, yoke_pitch);
         /* If rudder is still deflected, move it gradually back to zero. */
-        if (yaw_ratio != 0) {
+        if (yaw_ratio != 0 && rudder_return) {
             long long now = get_time_ms();
             float dt = (now - _last_time) / 1000.0f;
             _last_time = now;
@@ -290,8 +307,13 @@ int controlling_rudder(int *x, int *y) {
         if (!rudder_control) {
             if (change_cursor)
                 set_cursor_bmp(CURSOR_RUDDER);
-            /* Remember current cursor position */
+            /* Remember current cursor position. */
             XPLMGetMouseLocationGlobal(cursor_pos, cursor_pos + 1);
+            /* Set rudder cursor position, if enabled. */
+            if (set_rudder_pos) {
+                *x = *x + yaw_ratio * rudder_defl_dist;
+                set_cursor_pos(*x, *y);
+            }
             rudder_control = 1;
         }
     } else {

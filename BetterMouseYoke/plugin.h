@@ -29,6 +29,7 @@ typedef enum {
     CURSOR_RUDDER
 } cursor_t;
 
+int init_menu();
 int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref);
 int draw_cb(XPLMDrawingPhase phase, int before, void *ref);
 float loop_cb(float last_call, float last_loop, int count, void *ref);
