@@ -5,7 +5,7 @@
  * replaces it with a more sane system for those who, for whatever reason,
  * want to or have to use the mouse for flying.
  *
- * Copyright 2019 Torben Könke.
+ * Copyright 2019 Torben KÃ¶nke.
  */
 #include "plugin.h"
 
@@ -45,7 +45,18 @@ static HCURSOR yoke_cursor;
 static HCURSOR rudder_cursor;
 static HCURSOR arrow_cursor;
 static HCURSOR(WINAPI *true_set_cursor) (HCURSOR cursor) = SetCursor;
+#elif LIN
+    Display *dpy;
+    XEvent ev;
+    XIEvent *xi_event;
+    XIRawEvent *xev;
+    Cursor cross;
+    Cursor arrows;
+    Cursor def;
+    Window window;
 #endif
+
+
 
 /**
  * X-Plane 11 Plugin Entry Point.
@@ -118,6 +129,30 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc) {
         _log("could not load arrow_cursor");
         return 0;
     }
+#elif LIN
+int xi_opcode, event, error;
+
+    dpy = XOpenDisplay(NULL);
+    if (!dpy) {
+    _log("Failed to open display.\n");
+    return 0;
+    }
+
+    window = XDefaultRootWindow(dpy);
+    if (!XQueryExtension(dpy, "XInputExtension", &xi_opcode, &event, &error)) {
+       _log("X Input extension not available.\n");
+          return 0;
+    }
+
+    if (!has_xi2(dpy))
+    return 0;
+
+    select_events(dpy, DefaultRootWindow(dpy));
+
+    def = XcursorLibraryLoadCursor(dpy, "left_ptr");
+    cross = XcursorLibraryLoadCursor(dpy, "cross");
+    arrows = XcursorLibraryLoadCursor(dpy, "sb_h_double_arrow");
+
 #endif
     return 1;
 }
@@ -169,6 +204,13 @@ PLUGIN_API void XPluginDisable(void) {
         XPLMDestroyFlightLoop(loop_id);
     loop_id = NULL;
     menu_deinit();
+#ifdef LIN
+    XDefineCursor(dpy, window, def);
+    XFreeCursor(dpy, cross);
+    XFreeCursor(dpy, arrows);
+    XFreeCursor(dpy, def);
+    XFlush(dpy);
+#endif // LIN
 }
 
 /**
@@ -298,6 +340,35 @@ int left_mouse_down() {
     /* Apparently you can use this also outside of the context of an event. */
     return CGEventSourceButtonState(
         kCGEventSourceStateCombinedSessionState, kCGMouseButtonLeft);
+#elif LIN
+
+static int mouse_but = 0;
+
+    XGenericEventCookie *cookie = &ev.xcookie;
+
+    XCheckTypedEvent(dpy, GenericEvent ,&ev);
+
+    if (cookie->type != GenericEvent ||
+        !XGetEventData(dpy, cookie))
+        return mouse_but;
+
+    xi_event = (XIEvent *) cookie->data;
+    xev = (XIRawEvent *) xi_event;
+
+    if(xev->detail == 1)
+    {
+        switch (cookie->evtype) {
+            case XI_RawButtonPress:
+                mouse_but = 1;
+                break;
+            case XI_RawButtonRelease:
+                mouse_but = 0;
+                break;
+            }
+
+        XFreeEventData(dpy, cookie);
+    }
+    return mouse_but;
 #endif
 }
 
@@ -372,6 +443,9 @@ void set_cursor_pos(int x, int y) {
     CGEventRef ev = CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, pt, 0);
     CGEventPost(kCGHIDEventTap, ev);
     CFRelease(ev);
+#elif LIN
+    XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, screen_height - y);
+    XFlush(dpy);
 #endif
 }
 
@@ -391,6 +465,23 @@ void set_cursor_bmp(cursor_t cursor) {
     /* TODO */
     /* Can probably use NSCursor::set for this but not sure we can hook
        that under OSX to prevent XP from constantly overriding our cursor...*/
+#elif LIN
+ /*TODO*/
+ /*Use custom png cursors*/
+    Cursor c = def;
+    switch (cursor) {
+    case CURSOR_YOKE:
+        c = cross;
+        break;
+    case CURSOR_RUDDER:
+        c = arrows;
+        break;
+    case CURSOR_ARROW:
+        c = def;
+        break;
+    }
+    XDefineCursor(dpy, window, c);
+    XFlush(dpy);
 #endif
 }
 
@@ -428,4 +519,47 @@ int hook_set_cursor(int attach) {
     }
     return 1;
 }
+#elif LIN
+
+static int has_xi2(Display *dpy)
+{
+    int major, minor;
+    int rc;
+
+    /* We support XI 2.2 */
+    major = 2;
+    minor = 2;
+
+    rc = XIQueryVersion(dpy, &major, &minor);
+    if (rc == BadRequest) {
+    _log("No XI2 support.\n");
+    return 0;
+    } else if (rc != Success) {
+    _log("Internal Error! This is a bug in Xlib.\n");
+    }
+
+    _log("XI2 supported.\n");
+
+    return 1;
+}
+
+static void select_events(Display *dpy, Window win)
+{
+    XIEventMask evmasks[1];
+    unsigned char mask1[(XI_LASTEVENT + 7)/8];
+
+    memset(mask1, 0, sizeof(mask1));
+
+    /* select for button and key events from all master devices */
+    XISetMask(mask1, XI_RawButtonPress);
+    XISetMask(mask1, XI_RawButtonRelease);
+
+    evmasks[0].deviceid = XIAllMasterDevices;
+    evmasks[0].mask_len = sizeof(mask1);
+    evmasks[0].mask = mask1;
+
+    XISelectEvents(dpy, win, evmasks, 1);
+    XFlush(dpy);
+}
+
 #endif
