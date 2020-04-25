@@ -54,11 +54,7 @@ static HCURSOR(WINAPI *true_set_cursor) (HCURSOR cursor) = SetCursor;
     Cursor arrows;
     Cursor def;
     Window window;
-
-    int button_state = 0;
 #endif
-
-static void update_button_state();
 
 /**
  * X-Plane 11 Plugin Entry Point.
@@ -149,8 +145,6 @@ int xi_opcode, event, error;
     if (!has_xi2(dpy))
     return 0;
 
-    select_events(dpy, DefaultRootWindow(dpy));
-
     def = XcursorLibraryLoadCursor(dpy, "left_ptr");
     cross = XcursorLibraryLoadCursor(dpy, "cross");
     arrows = XcursorLibraryLoadCursor(dpy, "sb_h_double_arrow");
@@ -169,6 +163,13 @@ PLUGIN_API void XPluginStop(void) {
     if (!hook_set_cursor(0)) {
         _log("could not unhook SetCursor function");
     }
+#elif LIN
+    XDefineCursor(dpy, window, def);
+    XFreeCursor(dpy, cross);
+    XFreeCursor(dpy, arrows);
+    XFreeCursor(dpy, def);
+    XFlush(dpy);
+    XCloseDisplay(dpy);
 #endif
 }
 
@@ -208,9 +209,6 @@ PLUGIN_API void XPluginDisable(void) {
     menu_deinit();
 #ifdef LIN
     XDefineCursor(dpy, window, def);
-    XFreeCursor(dpy, cross);
-    XFreeCursor(dpy, arrows);
-    XFreeCursor(dpy, def);
     XFlush(dpy);
 #endif // LIN
 }
@@ -253,7 +251,13 @@ int toggle_yoke_control_cb(XPLMCommandRef cmd, XPLMCommandPhase phase, void *ref
             set_cursor_bmp(CURSOR_ARROW);
         yoke_control_enabled = 0;
         rudder_control = 0;
+#ifdef LIN
+    deselect_events(dpy, window);
+#endif // LIN
     } else {
+#ifdef LIN
+    select_events(dpy, window);
+#endif // LIN
         /* Fetch screen dimensions here because doing it from XPluginEnable
            give unrealiable results. Also the screen size may be changed by
            the user at any time. */
@@ -290,7 +294,6 @@ int draw_cb(XPLMDrawingPhase phase, int before, void *ref) {
 
 float loop_cb(float last_call, float last_loop, int count, void *ref) {
     static long long _last_time;
-    update_button_state();
     /* If user has disabled mouse yoke control, suspend loop. */
     if (yoke_control_enabled == 0) {
         /* If rudder is still deflected, move it gradually back to zero. */
@@ -345,34 +348,33 @@ int left_mouse_down() {
         kCGEventSourceStateCombinedSessionState, kCGMouseButtonLeft);
 #elif LIN
 
-//static int mouse_but = 0;
-//
-//    XGenericEventCookie *cookie = &ev.xcookie;
-//
-//  //  XCheckTypedEvent(dpy, GenericEvent ,&ev);
-//
-//    if (cookie->type != GenericEvent ||
-//        !XGetEventData(dpy, cookie))
-//        return mouse_but;
-//
-//    xi_event = (XIEvent *) cookie->data;
-//    xev = (XIRawEvent *) xi_event;
-//
-//    if(xev->detail == 1)
-//    {
-//        switch (cookie->evtype) {
-//            case XI_RawButtonPress:
-//                mouse_but = 1;
-//                break;
-//            case XI_RawButtonRelease:
-//                mouse_but = 0;
-//                break;
-//            }
-//
-//        XFreeEventData(dpy, cookie);
-//    }
-//    return mouse_but;
-    return button_state;
+static int mouse_but = 0;
+
+    XGenericEventCookie *cookie = &ev.xcookie;
+
+    XCheckTypedEvent(dpy, GenericEvent ,&ev);
+
+    if (cookie->type != GenericEvent ||
+        !XGetEventData(dpy, cookie))
+        return mouse_but;
+
+    xi_event = (XIEvent *) cookie->data;
+    xev = (XIRawEvent *) xi_event;
+
+    if(xev->detail == 1)
+    {
+        switch (cookie->evtype) {
+            case XI_RawButtonPress:
+                mouse_but = 1;
+                break;
+            case XI_RawButtonRelease:
+                mouse_but = 0;
+                break;
+            }
+
+        XFreeEventData(dpy, cookie);
+    }
+    return mouse_but;
 #endif
 }
 
@@ -448,7 +450,7 @@ void set_cursor_pos(int x, int y) {
     CGEventPost(kCGHIDEventTap, ev);
     CFRelease(ev);
 #elif LIN
-    XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, screen_height - y);
+    XWarpPointer(dpy, None, window, 0, 0, 0, 0, x, screen_height - y);
     XFlush(dpy);
 #endif
 }
@@ -525,34 +527,6 @@ int hook_set_cursor(int attach) {
 }
 #elif LIN
 
-static void update_button_state()
-{
-    XGenericEventCookie *cookie = &ev.xcookie;
-
-    XCheckTypedEvent(dpy, GenericEvent ,&ev);
-
-    if (cookie->type != GenericEvent ||
-        !XGetEventData(dpy, cookie))
-        return;
-
-    xi_event = (XIEvent *) cookie->data;
-    xev = (XIRawEvent *) xi_event;
-
-    if(xev->detail == 1)
-    {
-        switch (cookie->evtype) {
-            case XI_RawButtonPress:
-                button_state = 1;
-                break;
-            case XI_RawButtonRelease:
-                button_state = 0;
-                break;
-            }
-
-        XFreeEventData(dpy, cookie);
-    }
-}
-
 static int has_xi2(Display *dpy)
 {
     int major, minor;
@@ -585,6 +559,24 @@ static void select_events(Display *dpy, Window win)
     /* select for button and key events from all master devices */
     XISetMask(mask1, XI_RawButtonPress);
     XISetMask(mask1, XI_RawButtonRelease);
+
+    evmasks[0].deviceid = XIAllMasterDevices;
+    evmasks[0].mask_len = sizeof(mask1);
+    evmasks[0].mask = mask1;
+
+    XISelectEvents(dpy, win, evmasks, 1);
+    XFlush(dpy);
+}
+
+static void deselect_events(Display *dpy, Window win)
+{
+    XIEventMask evmasks[1];
+    unsigned char mask1[(XI_LASTEVENT + 7)/8];
+
+    memset(mask1, 0, sizeof(mask1));
+
+    /* select for button and key events from all master devices */
+    XISetMask(mask1, 0);
 
     evmasks[0].deviceid = XIAllMasterDevices;
     evmasks[0].mask_len = sizeof(mask1);

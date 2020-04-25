@@ -47,6 +47,7 @@ int controlling_rudder(int *x, int *y);
 #ifdef LIN
 static int has_xi2(Display *dpy);
 static void select_events(Display *dpy, Window win);
+static void deselect_events(Display *dpy, Window win);
 #endif // LIN
 
 
