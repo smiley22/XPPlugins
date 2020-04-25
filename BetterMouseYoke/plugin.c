@@ -54,9 +54,11 @@ static HCURSOR(WINAPI *true_set_cursor) (HCURSOR cursor) = SetCursor;
     Cursor arrows;
     Cursor def;
     Window window;
+
+    int button_state = 0;
 #endif
 
-
+static void update_button_state();
 
 /**
  * X-Plane 11 Plugin Entry Point.
@@ -288,6 +290,7 @@ int draw_cb(XPLMDrawingPhase phase, int before, void *ref) {
 
 float loop_cb(float last_call, float last_loop, int count, void *ref) {
     static long long _last_time;
+    update_button_state();
     /* If user has disabled mouse yoke control, suspend loop. */
     if (yoke_control_enabled == 0) {
         /* If rudder is still deflected, move it gradually back to zero. */
@@ -342,33 +345,34 @@ int left_mouse_down() {
         kCGEventSourceStateCombinedSessionState, kCGMouseButtonLeft);
 #elif LIN
 
-static int mouse_but = 0;
-
-    XGenericEventCookie *cookie = &ev.xcookie;
-
-    XCheckTypedEvent(dpy, GenericEvent ,&ev);
-
-    if (cookie->type != GenericEvent ||
-        !XGetEventData(dpy, cookie))
-        return mouse_but;
-
-    xi_event = (XIEvent *) cookie->data;
-    xev = (XIRawEvent *) xi_event;
-
-    if(xev->detail == 1)
-    {
-        switch (cookie->evtype) {
-            case XI_RawButtonPress:
-                mouse_but = 1;
-                break;
-            case XI_RawButtonRelease:
-                mouse_but = 0;
-                break;
-            }
-
-        XFreeEventData(dpy, cookie);
-    }
-    return mouse_but;
+//static int mouse_but = 0;
+//
+//    XGenericEventCookie *cookie = &ev.xcookie;
+//
+//  //  XCheckTypedEvent(dpy, GenericEvent ,&ev);
+//
+//    if (cookie->type != GenericEvent ||
+//        !XGetEventData(dpy, cookie))
+//        return mouse_but;
+//
+//    xi_event = (XIEvent *) cookie->data;
+//    xev = (XIRawEvent *) xi_event;
+//
+//    if(xev->detail == 1)
+//    {
+//        switch (cookie->evtype) {
+//            case XI_RawButtonPress:
+//                mouse_but = 1;
+//                break;
+//            case XI_RawButtonRelease:
+//                mouse_but = 0;
+//                break;
+//            }
+//
+//        XFreeEventData(dpy, cookie);
+//    }
+//    return mouse_but;
+    return button_state;
 #endif
 }
 
@@ -520,6 +524,34 @@ int hook_set_cursor(int attach) {
     return 1;
 }
 #elif LIN
+
+static void update_button_state()
+{
+    XGenericEventCookie *cookie = &ev.xcookie;
+
+    XCheckTypedEvent(dpy, GenericEvent ,&ev);
+
+    if (cookie->type != GenericEvent ||
+        !XGetEventData(dpy, cookie))
+        return;
+
+    xi_event = (XIEvent *) cookie->data;
+    xev = (XIRawEvent *) xi_event;
+
+    if(xev->detail == 1)
+    {
+        switch (cookie->evtype) {
+            case XI_RawButtonPress:
+                button_state = 1;
+                break;
+            case XI_RawButtonRelease:
+                button_state = 0;
+                break;
+            }
+
+        XFreeEventData(dpy, cookie);
+    }
+}
 
 static int has_xi2(Display *dpy)
 {
