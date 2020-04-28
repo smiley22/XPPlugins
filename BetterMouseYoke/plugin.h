@@ -5,7 +5,7 @@
  * replaces it with a more sane system for those who, for whatever reason,
  * want to or have to use the mouse for flying.
  *
- * Copyright 2019 Torben Könke.
+ * Copyright 2019 Torben KÃ¶nke.
  */
 #ifndef _PLUGIN_H_
 #define _PLUGIN_H_
@@ -21,7 +21,12 @@
 #pragma comment(lib, "detours.lib")
 #include "detours.h"
 int hook_set_cursor(int attach);
+#elif LIN
+#include <X11/Xlib.h>
+#include <X11/extensions/XInput2.h>
+#include <X11/Xcursor/Xcursor.h>
 #endif
+
 
 typedef enum {
     CURSOR_ARROW,
@@ -38,4 +43,12 @@ void set_cursor_from_yoke();
 void set_cursor_pos(int x, int y);
 void set_cursor_bmp(cursor_t cursor);
 int controlling_rudder(int *x, int *y);
+
+#ifdef LIN
+static int has_xi2(Display *dpy);
+static void select_events(Display *dpy, Window win);
+static void deselect_events(Display *dpy, Window win);
+#endif // LIN
+
+
 #endif /* _PLUGIN_H_ */
