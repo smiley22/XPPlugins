@@ -247,6 +247,7 @@ static mbutton_t ev_to_mbutton(CGEventType type, CGEventRef ev, int *state) {
 CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
     CGEventRef ev, void *data) {
     int state;
+
     mbutton_t mbutton = ev_to_mbutton(type, ev, &state);
     if (mbutton != M_NONE) {
         int mod = 0;
@@ -294,15 +295,9 @@ CGEventRef cg_event_cb(CGEventTapProxy proxy, CGEventType type,
 }
 
 int tap_events() {
-    ProcessSerialNumber psn;
-    OSErr err = GetCurrentProcess(&psn);
-    if (err != noErr) {
-        _log("could not get psn (%i)", err);
-        return 0;
-    }
     /* CGEventTapCreateForPid has only been added with 10.11 */
-    event_tap = CGEventTapCreateForPSN(&psn, kCGHeadInsertEventTap,
-        kCGEventTapOptionDefault,
+    event_tap = CGEventTapCreateForPid(getpid(), kCGTailAppendEventTap,
+        kCGEventTapOptionListenOnly,
         CGEventMaskBit(kCGEventLeftMouseDown)  |
         CGEventMaskBit(kCGEventLeftMouseUp)    |
         CGEventMaskBit(kCGEventRightMouseDown) |
